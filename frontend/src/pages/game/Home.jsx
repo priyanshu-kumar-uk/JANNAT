@@ -1,3 +1,4 @@
+<<<<<<< HEAD:frontend/src/pages/Home.jsx
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -22,6 +23,18 @@ const Home = () => {
   const { user, isAuthenticated, isInitialized } = useSelector((state) => state.auth);
 
   // Live winner announcement ticker feed
+=======
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+const Home = () => {
+
+
+  const navigate = useNavigate()
+
+
+  // Live winner announcement feed
+>>>>>>> 810bd05415434897c150d5079d9d695f1696213a:frontend/src/pages/game/Home.jsx
   const winnersList = [
     { user: '****819', amount: '₹6,000', game: 'Parity' },
     { user: '****352', amount: '₹12,400', game: 'Fast-Parity' },
@@ -481,9 +494,79 @@ const Home = () => {
             onClick={() => handleGuardedAction('MineSweeper Game')}
             className="h-[185px] rounded-2xl bg-gradient-to-b from-[#f87171] to-[#dc2626] p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-all duration-150 shadow-md relative overflow-hidden group"
           >
+<<<<<<< HEAD:frontend/src/pages/Home.jsx
             {!isAuthenticated && (
               <div className="absolute top-2 right-2 z-20 bg-black/30 backdrop-blur-xs w-6 h-6 rounded-full flex items-center justify-center text-white/90">
                 <Lock size={11} />
+=======
+            Withdraw
+          </button>
+        </div>
+      </div>
+
+      {/* 3. Task Reward & Check In Row */}
+      <div className="w-full px-6 py-3 flex items-center justify-between">
+        {/* Task reward */}
+        <div
+          onClick={() => showToast('Task reward opened')}
+          className="flex items-center gap-2.5 cursor-pointer active:scale-95 transition-transform duration-150"
+        >
+          <div className="w-9 h-9 rounded-full bg-[#f59e0b] flex items-center justify-center shadow-xs">
+            <svg viewBox="0 0 24 24" className="w-5 h-5 text-white" fill="none">
+              <rect x="3" y="9" width="18" height="12" rx="2" fill="currentColor" />
+              <rect x="2" y="6" width="20" height="4" rx="1.5" fill="currentColor" opacity="0.9" />
+              <path d="M12 6v15" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" />
+              <path d="M3 13.5h18" stroke="#f59e0b" strokeWidth="2" />
+              <path d="M12 6C10.5 3.5 8 4 8 5.5C8 7 12 6.5 12 6Z" fill="currentColor" />
+              <path d="M12 6C13.5 3.5 16 4 16 5.5C16 7 12 6.5 12 6Z" fill="currentColor" />
+            </svg>
+          </div>
+          <span className="text-gray-700 text-xs font-bold tracking-tight">Task reward</span>
+        </div>
+
+        {/* Check in */}
+        <div
+          onClick={() => showToast('Daily Check-in successful!')}
+          className="flex items-center gap-2.5 cursor-pointer active:scale-95 transition-transform duration-150"
+        >
+          <div className="w-9 h-9 rounded-full bg-[#00c08b] flex items-center justify-center shadow-xs">
+            <svg viewBox="0 0 24 24" className="w-5 h-5 text-white" fill="none">
+              <rect x="3.5" y="4.5" width="17" height="16" rx="3" fill="currentColor" />
+              <rect x="3.5" y="4.5" width="17" height="5" rx="2" fill="white" opacity="0.25" />
+              <path d="M8 2.5v3M16 2.5v3" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
+              <path d="M8 13.5l2.5 2.5 5.5-5.5" stroke="#00c08b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <span className="text-gray-700 text-xs font-bold tracking-tight">Check in</span>
+        </div>
+      </div>
+
+      {/* 4. Game Cards 2x2 Grid */}
+      <div className="w-full px-3.5 pt-1 grid grid-cols-2 gap-3.5">
+        {/* CARD 1: Fast-Parity */}
+        <div
+          onClick={() => navigate("/parity")}
+          className="h-[188px] rounded-2xl bg-[#4ec5dc] p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-transform duration-150 shadow-xs relative overflow-hidden"
+        >
+          {/* Top miniature rocket */}
+          <div className="absolute top-2 left-1/2 -translate-x-1/2">
+            <svg viewBox="0 0 32 32" className="w-6 h-6 transform -rotate-12">
+              <path d="M10 24L5 29C5 29 8 28 11 25Z" fill="#f97316" />
+              <path d="M11 25L7 28C7 28 9 27 12 25Z" fill="#facc15" />
+              <path d="M12 18L6 22L12 23Z" fill="#ef4444" />
+              <path d="M18 12L22 6L23 12Z" fill="#ef4444" />
+              <path d="M12 22C11 17 14 10 24 7C21 17 15 21 12 22Z" fill="#3b82f6" />
+              <circle cx="17" cy="15" r="3" fill="#60a5fa" stroke="white" strokeWidth="1.2" />
+            </svg>
+          </div>
+
+          {/* Graphic: 3 Discs */}
+          <div className="flex flex-col items-center justify-center my-auto pt-4">
+            <div className="flex items-center justify-center -space-x-2">
+              {/* Red 5 */}
+              <div className="w-10 h-10 rounded-full bg-[#e53935] flex items-center justify-center shadow-md z-0">
+                <span className="text-white font-black text-lg leading-none">5</span>
+>>>>>>> 810bd05415434897c150d5079d9d695f1696213a:frontend/src/pages/game/Home.jsx
               </div>
             )}
 

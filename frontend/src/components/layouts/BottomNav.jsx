@@ -107,11 +107,16 @@ const BottomNav = ({ onAuthRequired, onOpenProfile }) => {
             {tab.icon(isActive)}
             
             <span
+<<<<<<< HEAD:frontend/src/components/BottomNav.jsx
               className={`text-[11px] mt-1 tracking-tight transition-all duration-150 ${
                 isActive
                   ? 'text-[#8B3A13] font-bold'
                   : 'text-[#8C7A6F] font-medium group-hover:text-[#4A382F]'
               }`}
+=======
+              className={`text-[11px] mt-0.5 tracking-tight font-medium ${isActive ? 'text-[#2196f3] font-bold' : 'text-gray-400'
+                }`}
+>>>>>>> 810bd05415434897c150d5079d9d695f1696213a:frontend/src/components/layouts/BottomNav.jsx
             >
               {tab.label}
             </span>
