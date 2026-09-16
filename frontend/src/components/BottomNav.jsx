@@ -71,9 +71,8 @@ const BottomNav = () => {
           >
             {tab.icon(isActive)}
             <span
-              className={`text-[11px] mt-0.5 tracking-tight font-medium ${
-                isActive ? 'text-[#2196f3] font-bold' : 'text-gray-400'
-              }`}
+              className={`text-[11px] mt-0.5 tracking-tight font-medium ${isActive ? 'text-[#2196f3] font-bold' : 'text-gray-400'
+                }`}
             >
               {tab.label}
             </span>

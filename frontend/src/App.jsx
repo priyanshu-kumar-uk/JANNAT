@@ -1,8 +1,9 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import BottomNav from './components/BottomNav'
 
 const App = () => {
-
+  const location = useLocation()
+  const isGamePage = location.pathname.startsWith('/parity')
 
   return (
     <div className='h-screen bg-black w-full flex justify-center items-center'>
@@ -10,7 +11,7 @@ const App = () => {
         <div className="flex-1 overflow-y-auto">
           <Outlet />
         </div>
-        <BottomNav />
+        {!isGamePage && <BottomNav />}
       </div>
     </div>
   )

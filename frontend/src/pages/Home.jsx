@@ -1,6 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
+
+
+  const navigate = useNavigate()
+
+
   // Live winner announcement feed
   const winnersList = [
     { user: '****819', amount: '₹6000', game: 'Parity game' },
@@ -139,7 +145,7 @@ const Home = () => {
       <div className="w-full px-3.5 pt-1 grid grid-cols-2 gap-3.5">
         {/* CARD 1: Fast-Parity */}
         <div
-          onClick={() => showToast('Opening Fast-Parity')}
+          onClick={() => navigate("/parity")}
           className="h-[188px] rounded-2xl bg-[#4ec5dc] p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-transform duration-150 shadow-xs relative overflow-hidden"
         >
           {/* Top miniature rocket */}
