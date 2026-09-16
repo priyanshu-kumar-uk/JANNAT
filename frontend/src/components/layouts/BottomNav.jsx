@@ -1,18 +1,30 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Home, Users, Zap, User } from 'lucide-react';
 
 const BottomNav = ({ onAuthRequired, onOpenProfile }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated } = useSelector((state) => state.auth);
-  const [activeTab, setActiveTab] = React.useState('fiewin');
+
+  const getActiveTab = () => {
+    if (location.pathname === '/my' || location.pathname === '/dashboard') return 'my';
+    if (location.pathname === '/invite') return 'invite';
+    if (location.pathname === '/recharge') return 'recharge';
+    return 'fiewin';
+  };
+
+  const activeTab = getActiveTab();
 
   const handleTabClick = (tabId) => {
-    setActiveTab(tabId);
-
     if (tabId === 'fiewin') {
       navigate('/');
+      return;
+    }
+
+    if (tabId === 'my') {
+      navigate('/my');
       return;
     }
 
@@ -25,8 +37,8 @@ const BottomNav = ({ onAuthRequired, onOpenProfile }) => {
       return;
     }
 
-    if (tabId === 'my') {
-      if (onOpenProfile) onOpenProfile();
+    if (tabId === 'recharge') {
+      navigate('/my'); // Opens dashboard with recharge station
     }
   };
 
