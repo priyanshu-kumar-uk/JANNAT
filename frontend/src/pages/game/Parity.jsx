@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ResultPopup from '../../components/games/ResultPopup';
 
 // Color definitions based on parity rules
 const getResultType = (num) => {
@@ -56,6 +57,7 @@ const Parity = () => {
   const [agreeRule, setAgreeRule] = useState(true);
   const [showRuleModal, setShowRuleModal] = useState(false);
   const [showMoreModal, setShowMoreModal] = useState(false);
+  const [resultPopupData, setResultPopupData] = useState(null);
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -77,46 +79,59 @@ const Parity = () => {
           setPeriod((p) => p + 1);
 
           // Evaluate user bets for this round
-          if (myBets.length > 0) {
+          const currentRoundBets = myBets.filter((bet) => bet.period === period);
+          if (currentRoundBets.length > 0) {
             let totalWinnings = 0;
-            myBets.forEach((bet) => {
-              if (bet.period === period) {
-                let won = false;
-                let multiplier = 0;
+            let totalBetPoint = 0;
+            let selectedLabels = [];
 
-                if (bet.type === 'green' && [1, 3, 7, 9].includes(newNumber)) {
-                  won = true;
-                  multiplier = 2;
-                } else if (bet.type === 'green' && newNumber === 5) {
-                  won = true;
-                  multiplier = 1.5;
-                } else if (bet.type === 'red' && [2, 4, 6, 8].includes(newNumber)) {
-                  won = true;
-                  multiplier = 2;
-                } else if (bet.type === 'red' && newNumber === 0) {
-                  won = true;
-                  multiplier = 1.5;
-                } else if (bet.type === 'violet' && [0, 5].includes(newNumber)) {
-                  won = true;
-                  multiplier = 4.5;
-                } else if (bet.type === 'number' && bet.value === newNumber) {
-                  won = true;
-                  multiplier = 9;
-                }
+            currentRoundBets.forEach((bet) => {
+              totalBetPoint += bet.amount;
+              selectedLabels.push(bet.type === 'number' ? bet.value : bet.type.toUpperCase());
+              let won = false;
+              let multiplier = 0;
 
-                if (won) {
-                  const winAmt = Math.floor(bet.amount * multiplier * 0.98);
-                  totalWinnings += winAmt;
-                }
+              if (bet.type === 'green' && [1, 3, 7, 9].includes(newNumber)) {
+                won = true;
+                multiplier = 2;
+              } else if (bet.type === 'green' && newNumber === 5) {
+                won = true;
+                multiplier = 1.5;
+              } else if (bet.type === 'red' && [2, 4, 6, 8].includes(newNumber)) {
+                won = true;
+                multiplier = 2;
+              } else if (bet.type === 'red' && newNumber === 0) {
+                won = true;
+                multiplier = 1.5;
+              } else if (bet.type === 'violet' && [0, 5].includes(newNumber)) {
+                won = true;
+                multiplier = 4.5;
+              } else if (bet.type === 'number' && bet.value === newNumber) {
+                won = true;
+                multiplier = 9;
+              }
+
+              if (won) {
+                const winAmt = Math.floor(bet.amount * multiplier * 0.98);
+                totalWinnings += winAmt;
               }
             });
 
-            if (totalWinnings > 0) {
+            const isWin = totalWinnings > 0;
+            if (isWin) {
               setBalance((b) => b + totalWinnings);
-              showToast(`🎉 Period ${finishedPeriodShort} Result: ${newNumber}! You Won ₹${totalWinnings}`);
-            } else {
-              showToast(`Period ${finishedPeriodShort} Result: ${newNumber}`);
             }
+
+            setResultPopupData({
+              isOpen: true,
+              isWin,
+              resultNumber: newNumber,
+              period: period,
+              price: `$${40000 + Math.floor(Math.random() * 8000)}`,
+              select: selectedLabels.join(', '),
+              point: totalBetPoint,
+              amount: isWin ? totalWinnings : -totalBetPoint,
+            });
           }
 
           return 30; // Reset to 30s
@@ -850,6 +865,21 @@ const Parity = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {/* MODAL 4: Result Popup */}
+      {resultPopupData && (
+        <ResultPopup
+          isOpen={Boolean(resultPopupData)}
+          onClose={() => setResultPopupData(null)}
+          isWin={resultPopupData.isWin}
+          resultNumber={resultPopupData.resultNumber}
+          period={resultPopupData.period}
+          price={resultPopupData.price}
+          select={resultPopupData.select}
+          point={resultPopupData.point}
+          amount={resultPopupData.amount}
+        />
       )}
     </div>
   );
