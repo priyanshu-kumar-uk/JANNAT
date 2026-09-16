@@ -1,20 +1,47 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { Home, Users, Zap, User } from 'lucide-react';
 
-const BottomNav = () => {
-  const [activeTab, setActiveTab] = useState('fiewin');
+const BottomNav = ({ onAuthRequired, onOpenProfile }) => {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  const [activeTab, setActiveTab] = React.useState('fiewin');
+
+  const handleTabClick = (tabId) => {
+    setActiveTab(tabId);
+
+    if (tabId === 'fiewin') {
+      navigate('/');
+      return;
+    }
+
+    if (!isAuthenticated) {
+      if (onAuthRequired) {
+        onAuthRequired(`Please Login to access ${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`);
+      } else {
+        navigate('/login');
+      }
+      return;
+    }
+
+    if (tabId === 'my') {
+      if (onOpenProfile) onOpenProfile();
+    }
+  };
 
   const tabs = [
     {
       id: 'fiewin',
-      label: 'FieWin',
+      label: 'Home',
       icon: (isActive) => (
-        <div className="relative w-6 h-6 flex items-center justify-center">
-          <svg viewBox="0 0 24 24" className={`w-6 h-6 ${isActive ? 'text-[#2196f3]' : 'text-gray-400'}`} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            {/* House Outline */}
-            <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-9.5z" />
-            {/* Water Drop inside */}
-            <path d="M12 11c-1.5 1.8-2 2.7-2 3.8a2 2 0 0 0 4 0c0-1.1-.5-2-2-3.8z" fill={isActive ? '#2196f3' : '#9ca3af'} stroke="none" />
-          </svg>
+        <div className="relative">
+          <Home
+            size={20}
+            className={`transition-transform duration-200 ${
+              isActive ? 'text-[#8B3A13] scale-110 stroke-[2.5]' : 'text-[#8C7A6F] stroke-[1.8]'
+            }`}
+          />
         </div>
       ),
     },
@@ -22,13 +49,13 @@ const BottomNav = () => {
       id: 'invite',
       label: 'Invite',
       icon: (isActive) => (
-        <div className="relative w-6 h-6 flex items-center justify-center">
-          <svg viewBox="0 0 24 24" className={`w-6 h-6 ${isActive ? 'text-[#2196f3]' : 'text-gray-400'}`} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-          </svg>
+        <div className="relative">
+          <Users
+            size={20}
+            className={`transition-transform duration-200 ${
+              isActive ? 'text-[#8B3A13] scale-110 stroke-[2.5]' : 'text-[#8C7A6F] stroke-[1.8]'
+            }`}
+          />
         </div>
       ),
     },
@@ -36,12 +63,13 @@ const BottomNav = () => {
       id: 'recharge',
       label: 'Recharge',
       icon: (isActive) => (
-        <div className="relative w-6 h-6 flex items-center justify-center">
-          <svg viewBox="0 0 24 24" className={`w-6 h-6 ${isActive ? 'text-[#2196f3]' : 'text-gray-400'}`} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="9" />
-            <path d="M8 10h8M16 10l-3-3" />
-            <path d="M16 14H8M8 14l3 3" />
-          </svg>
+        <div className="relative">
+          <Zap
+            size={20}
+            className={`transition-transform duration-200 ${
+              isActive ? 'text-[#8B3A13] scale-110 stroke-[2.5]' : 'text-[#8C7A6F] stroke-[1.8]'
+            }`}
+          />
         </div>
       ),
     },
@@ -49,30 +77,40 @@ const BottomNav = () => {
       id: 'my',
       label: 'My',
       icon: (isActive) => (
-        <div className="relative w-6 h-6 flex items-center justify-center">
-          <svg viewBox="0 0 24 24" className={`w-6 h-6 ${isActive ? 'text-[#2196f3]' : 'text-gray-400'}`} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-          </svg>
+        <div className="relative">
+          <User
+            size={20}
+            className={`transition-transform duration-200 ${
+              isActive ? 'text-[#8B3A13] scale-110 stroke-[2.5]' : 'text-[#8C7A6F] stroke-[1.8]'
+            }`}
+          />
         </div>
       ),
     },
   ];
 
   return (
-    <div className="w-full bg-white border-t border-gray-100 h-14 flex items-center justify-around shadow-sm select-none z-40 shrink-0">
+    <div className="w-full bg-white/95 backdrop-blur-md border-t border-[#EBE3D7]/80 h-15 flex items-center justify-around shadow-[0_-4px_20px_rgba(0,0,0,0.03)] select-none z-40 shrink-0">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         return (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className="flex-1 flex flex-col items-center justify-center py-1 cursor-pointer transition-colors"
+            onClick={() => handleTabClick(tab.id)}
+            className="flex-1 flex flex-col items-center justify-center py-1.5 cursor-pointer relative group transition-all duration-150"
           >
+            {/* Active Pill Glow */}
+            {isActive && (
+              <span className="absolute top-0 w-8 h-0.5 bg-[#8B3A13] rounded-full shadow-[0_2px_8px_#8B3A13]" />
+            )}
+            
             {tab.icon(isActive)}
+            
             <span
-              className={`text-[11px] mt-0.5 tracking-tight font-medium ${
-                isActive ? 'text-[#2196f3] font-bold' : 'text-gray-400'
+              className={`text-[11px] mt-1 tracking-tight transition-all duration-150 ${
+                isActive
+                  ? 'text-[#8B3A13] font-bold'
+                  : 'text-[#8C7A6F] font-medium group-hover:text-[#4A382F]'
               }`}
             >
               {tab.label}

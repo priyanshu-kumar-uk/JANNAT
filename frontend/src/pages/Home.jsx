@@ -1,307 +1,592 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import {
+  LogOut,
+  ShieldCheck,
+  Wallet,
+  X,
+  Lock,
+  Sparkles,
+  Flame,
+  ArrowRight,
+  Gift,
+  CalendarCheck,
+  TrendingUp,
+} from 'lucide-react';
+import { logoutUser } from '../store/slices/authSlice';
 
 const Home = () => {
-  // Live winner announcement feed
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { user, isAuthenticated, isInitialized } = useSelector((state) => state.auth);
+
+  // Live winner announcement ticker feed
   const winnersList = [
-    { user: '****819', amount: '₹6000', game: 'Parity game' },
-    { user: '****352', amount: '₹12400', game: 'Fast-Parity' },
-    { user: '****904', amount: '₹3500', game: 'MineSweeper' },
-    { user: '****118', amount: '₹8200', game: 'Crash' },
-    { user: '****627', amount: '₹15000', game: 'Andar Bahar' }
+    { user: '****819', amount: '₹6,000', game: 'Parity' },
+    { user: '****352', amount: '₹12,400', game: 'Fast-Parity' },
+    { user: '****904', amount: '₹3,500', game: 'MineSweeper' },
+    { user: '****118', amount: '₹8,200', game: 'Crash' },
+    { user: '****627', amount: '₹15,000', game: 'Andar Bahar' },
+    { user: '****445', amount: '₹22,500', game: 'Fast-Parity' },
   ];
 
   const [currentWinnerIndex, setCurrentWinnerIndex] = useState(0);
   const [toastMessage, setToastMessage] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authModalReason, setAuthModalReason] = useState('');
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+  // Winner ticker interval
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentWinnerIndex((prev) => (prev + 1) % winnersList.length);
-    }, 3200);
+    }, 3000);
     return () => clearInterval(interval);
   }, [winnersList.length]);
+
+  // Show Auth popup automatically on initial page visit if not authenticated
+  useEffect(() => {
+    if (isInitialized && !isAuthenticated) {
+      // Small timeout for smooth entry animation
+      const timer = setTimeout(() => {
+        setShowAuthModal(true);
+        setAuthModalReason('Join Jannat to play thrilling games & win real cash rewards!');
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [isInitialized, isAuthenticated]);
 
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
-    }, 2000);
+    }, 2200);
+  };
+
+  /**
+   * Guarded Action Handler
+   * Intercepts any click or feature access for unauthenticated users
+   */
+  const handleGuardedAction = (featureName, callback) => {
+    if (!isAuthenticated) {
+      setAuthModalReason(`Please Login to access ${featureName}`);
+      setShowAuthModal(true);
+      return;
+    }
+
+    if (callback) {
+      callback();
+    } else {
+      showToast(`${featureName} clicked`);
+    }
+  };
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await dispatch(logoutUser());
+      setShowProfileModal(false);
+      navigate('/login');
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   const currentWinner = winnersList[currentWinnerIndex];
 
+  // User display helpers
+  const displayBalance = isAuthenticated ? (user?.walletBalance ?? 0).toFixed(2) : '0.00';
+  const displayId = isAuthenticated ? (user?.mobileNumber || user?._id?.slice(-8)) : 'Guest User';
+  const displayName = isAuthenticated ? (user?.fullName || 'Jannat Player') : 'Guest';
+
   return (
-    <div className="w-full min-h-full bg-white flex flex-col font-sans select-none pb-20 relative">
+    <div className="w-full min-h-full bg-[#FAF8F5] flex flex-col font-sans select-none pb-18 relative">
+      
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-12 left-1/2 -translate-x-1/2 z-50 bg-gray-900/90 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-lg transition-all animate-bounce">
-          {toastMessage}
+        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 bg-[#1A110B]/95 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.25)] border border-amber-500/30 flex items-center gap-2 backdrop-blur-md animate-bounce">
+          <Sparkles size={14} className="text-amber-400" />
+          <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* 1. Top Winner Announcement Bar */}
-      <div className="w-full px-4 py-2.5 flex items-center border-b border-gray-100 bg-white">
-        {/* Avatar */}
-        <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-amber-400/80 shadow-xs flex items-center justify-center bg-amber-50 mr-2.5">
-          <svg viewBox="0 0 40 40" className="w-full h-full" fill="none">
-            <circle cx="20" cy="20" r="20" fill="#fef3c7" />
-            <circle cx="20" cy="20" r="19" stroke="#f59e0b" strokeWidth="1.5" />
-            {/* Hair */}
-            <path d="M12 24C12 15 15 10 20 10C25 10 28 15 28 24C28 27 26 31 24 33H16C14 31 12 27 12 24Z" fill="#1e1b4b" />
-            {/* Face */}
-            <circle cx="20" cy="18" r="6.5" fill="#fcd34d" />
-            {/* Bindi */}
-            <circle cx="20" cy="16" r="1.1" fill="#dc2626" />
-            {/* Traditional Dupatta / Veil in Red/Orange */}
-            <path d="M11 22C11 13 14 8 20 8C26 8 29 13 29 22C29 28 27 35 27 38H13C13 35 11 28 11 22Z" fill="#ea580c" opacity="0.88" />
-            {/* Garland necklace */}
-            <path d="M16 23.5C18 26 22 26 24 23.5" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" />
-            {/* Saree drape */}
-            <path d="M10 40C10 32 15 28 20 28C25 28 30 32 30 40Z" fill="#dc2626" />
-          </svg>
+      {/* ========================================================================= */}
+      {/* 1. AUTHENTICATION REQUIRED MODAL (POPUP ON FIRST VISIT / INTERACTION)     */}
+      {/* ========================================================================= */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.3)] border border-[#EBE3D7] animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Top Banner */}
+            <div className="relative bg-gradient-to-br from-[#1C120C] via-[#2D1B13] to-[#8B3A13] p-5 text-center text-white overflow-hidden">
+              {/* Background Glow */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/20 rounded-full blur-2xl pointer-events-none" />
+              
+              <button
+                onClick={() => setShowAuthModal(false)}
+                className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/80 hover:text-white transition-colors cursor-pointer"
+              >
+                <X size={15} />
+              </button>
+
+              <div className="w-14 h-14 mx-auto rounded-2xl bg-[#FAF6F0] p-1.5 shadow-lg border border-amber-400/40 mb-2.5 flex items-center justify-center">
+                <img
+                  src="/logo/Jannat-Logo.png"
+                  alt="Jannat Logo"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+
+              <h2 className="text-lg font-bold tracking-tight text-amber-100 font-serif">
+                Welcome to Jannat
+              </h2>
+              <p className="text-[11px] text-[#D8C7B8] mt-1 max-w-[240px] mx-auto leading-relaxed">
+                {authModalReason || 'Login or Create Account to start playing & withdraw instantly.'}
+              </p>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="p-4 space-y-2.5">
+              {/* Login Button */}
+              <button
+                onClick={() => {
+                  setShowAuthModal(false);
+                  navigate('/login');
+                }}
+                className="w-full py-2.5 px-4 bg-[#8B3A13] hover:bg-[#742E0E] text-white text-xs font-bold rounded-xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer group active:scale-[0.98]"
+              >
+                <span>Login to Account</span>
+                <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+              </button>
+
+              {/* Register Button */}
+              <button
+                onClick={() => {
+                  setShowAuthModal(false);
+                  navigate('/register');
+                }}
+                className="w-full py-2.5 px-4 bg-[#FAF6F0] hover:bg-[#F2ECE2] text-[#8B3A13] border border-[#E2D8CC] text-xs font-bold rounded-xl shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.98]"
+              >
+                <Gift size={14} className="text-[#8B3A13]" />
+                <span>Create New Account</span>
+              </button>
+
+              {/* Browse as guest */}
+              <button
+                onClick={() => setShowAuthModal(false)}
+                className="w-full py-1.5 text-center text-[11px] font-semibold text-[#8C7A6F] hover:text-[#4A382F] transition-colors cursor-pointer"
+              >
+                Continue Previewing Games
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 2. USER PROFILE & LOGOUT MODAL                                            */}
+      {/* ========================================================================= */}
+      {showProfileModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-[#EBE3D7] animate-in fade-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-[#8B3A13] to-[#B34E1E] p-4 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white font-black text-base shadow-sm">
+                  {displayName.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold tracking-tight">{displayName}</h3>
+                  <p className="text-[11px] text-white/80 font-mono">{user?.mobileNumber || 'Member'}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowProfileModal(false)}
+                className="w-8 h-8 rounded-full bg-black/15 hover:bg-black/25 flex items-center justify-center text-white cursor-pointer transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Content Details */}
+            <div className="p-4 space-y-3">
+              <div className="bg-[#FAF6F0] p-3.5 rounded-2xl border border-[#EBE3D7] flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/15 flex items-center justify-center text-[#8B3A13]">
+                    <Wallet size={16} />
+                  </div>
+                  <span className="text-xs font-semibold text-gray-700">Wallet Balance</span>
+                </div>
+                <span className="text-sm font-black text-gray-900">₹{displayBalance}</span>
+              </div>
+
+              <div className="bg-[#FAF6F0] p-3.5 rounded-2xl border border-[#EBE3D7] flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/15 flex items-center justify-center text-[#00c08b]">
+                    <ShieldCheck size={16} />
+                  </div>
+                  <span className="text-xs font-semibold text-gray-700">Account Status</span>
+                </div>
+                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                  Active
+                </span>
+              </div>
+
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="w-full mt-2 py-2.5 px-4 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {isLoggingOut ? (
+                  <div className="w-4 h-4 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <LogOut size={15} />
+                    <span>Log Out</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 3. FIXED TOP NAVBAR & LIVE WINNER TICKER                                 */}
+      {/* ========================================================================= */}
+      <header className="sticky top-0 z-30 w-full bg-white/95 backdrop-blur-md border-b border-[#EBE3D7] shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+        {/* Brand & Auth Status Bar */}
+        <div className="w-full px-3.5 py-2 flex items-center justify-between">
+          {/* Left Brand */}
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-xl bg-[#FAF6F0] border border-[#EBE3D7] p-0.5 shadow-xs flex items-center justify-center">
+              <img
+                src="/logo/Jannat-Logo.png"
+                alt="Jannat Logo"
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <span className="text-sm font-black tracking-tight text-[#2B1B14] font-serif uppercase">
+              Jannat
+            </span>
+          </div>
+
+          {/* Right Header Action */}
+          <div>
+            {isAuthenticated ? (
+              <button
+                onClick={() => setShowProfileModal(true)}
+                className="flex items-center gap-1.5 bg-[#FAF6F0] hover:bg-[#F2ECE2] border border-[#E2D8CC] px-2.5 py-1 rounded-full text-xs font-semibold text-[#4A382F] transition-colors cursor-pointer"
+              >
+                <div className="w-4 h-4 rounded-full bg-[#8B3A13] text-white text-[9px] font-bold flex items-center justify-center">
+                  {displayName.charAt(0).toUpperCase()}
+                </div>
+                <span className="max-w-[75px] truncate">{displayName}</span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => navigate('/login')}
+                  className="px-2.5 py-1 text-xs font-bold text-[#8B3A13] hover:text-[#6E2C0D] transition-colors cursor-pointer"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => navigate('/register')}
+                  className="px-3 py-1 bg-[#8B3A13] hover:bg-[#742E0E] text-white text-xs font-bold rounded-full shadow-xs transition-colors cursor-pointer"
+                >
+                  Register
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Dynamic Winner Ticker */}
-        <div className="flex-1 text-[13px] text-gray-700 truncate tracking-tight transition-opacity duration-300">
-          <span className="font-semibold text-gray-800">{currentWinner.user}</span>
-          <span className="mx-1 text-gray-600">Wins</span>
-          <span className="text-[#00c08b] font-bold">{currentWinner.amount}</span>
-          <span className="ml-1 text-gray-600">in {currentWinner.game}</span>
+        {/* Live Winner Ticker Bar */}
+        <div
+          onClick={() => handleGuardedAction('Live Winners Feed')}
+          className="w-full px-3.5 py-1.5 flex items-center justify-between bg-gradient-to-r from-[#FFF9F2] via-[#FFF3E6] to-[#FFF9F2] border-t border-[#F2ECE2] cursor-pointer"
+        >
+          <div className="flex items-center gap-2 overflow-hidden flex-1 mr-2">
+            <span className="flex h-2 w-2 relative shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+
+            <div className="text-[11px] text-[#6B5A4E] truncate tracking-tight">
+              <span className="font-bold text-[#2B1B14]">{currentWinner.user}</span>
+              <span className="mx-1 text-[#8C7A6F]">won</span>
+              <span className="text-emerald-600 font-black">{currentWinner.amount}</span>
+              <span className="ml-1 text-[#8C7A6F]">in {currentWinner.game}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center text-[10px] font-bold text-[#8B3A13] shrink-0 gap-0.5">
+            <span>LIVE</span>
+            <TrendingUp size={11} />
+          </div>
+        </div>
+      </header>
+
+      {/* ========================================================================= */}
+      {/* 4. PREMIUM HERO WALLET / BALANCE CARD                                     */}
+      {/* ========================================================================= */}
+      <div className="w-full px-3.5 pt-3">
+        <div className="w-full rounded-2xl bg-gradient-to-br from-[#1F140D] via-[#2B1C13] to-[#45271A] p-4 text-white shadow-[0_10px_25px_rgba(0,0,0,0.12)] border border-[#5A3828]/50 relative overflow-hidden">
+          {/* Subtle Ambient Glow */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+          
+          <div className="flex items-center justify-between">
+            {/* Left Balance Display */}
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[#D8C7B8] text-[11px] font-semibold tracking-wider uppercase">
+                  Available Points
+                </span>
+                {!isAuthenticated && (
+                  <span className="text-[9px] bg-amber-500/20 text-amber-300 font-semibold px-1.5 py-0.2 rounded">
+                    Demo
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-baseline mt-1">
+                <span className="text-2xl font-black text-white tracking-tight leading-none">
+                  ₹{displayBalance}
+                </span>
+                <span className="text-[11px] font-bold text-[#D8C7B8] ml-1.5">INR</span>
+              </div>
+
+              <div className="mt-2 flex items-center gap-1.5 text-[10px] text-[#A8988C] font-mono">
+                <span>ID: {displayId}</span>
+              </div>
+            </div>
+
+            {/* Right Action Buttons */}
+            <div className="flex flex-col gap-2 shrink-0">
+              <button
+                onClick={() => handleGuardedAction('Recharge')}
+                className="w-26 py-1.5 bg-gradient-to-r from-[#2196f3] to-[#00b0ff] text-white text-xs font-bold rounded-full shadow-md shadow-blue-500/25 active:scale-95 transition-transform cursor-pointer text-center"
+              >
+                Recharge
+              </button>
+              <button
+                onClick={() => handleGuardedAction('Withdraw')}
+                className="w-26 py-1.5 bg-white/15 hover:bg-white/20 border border-white/20 text-white text-xs font-bold rounded-full active:scale-95 transition-transform cursor-pointer text-center"
+              >
+                Withdraw
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* 2. Balance & Action Buttons Card */}
-      <div className="w-full px-5 pt-4 pb-3 flex items-center justify-between">
-        {/* Left: Balance info */}
-        <div className="flex flex-col">
-          <span className="text-gray-400 text-xs font-semibold tracking-wide">Point</span>
-          <div className="flex items-baseline mt-0.5">
-            <span className="text-[32px] font-black text-gray-800 tracking-tight leading-none">2.000</span>
-            <span className="text-[11px] font-bold text-gray-700 ml-1.5 self-baseline">rupee</span>
+      {/* ========================================================================= */}
+      {/* 5. QUICK ACTION CARDS (TASK REWARD & DAILY CHECK-IN)                      */}
+      {/* ========================================================================= */}
+      <div className="w-full px-3.5 py-3 grid grid-cols-2 gap-2.5">
+        {/* Task Reward */}
+        <div
+          onClick={() => handleGuardedAction('Task Rewards')}
+          className="bg-white rounded-2xl p-2.5 border border-[#EBE3D7] shadow-xs flex items-center justify-between cursor-pointer active:scale-[0.98] transition-all hover:border-[#8B3A13]/40 group"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <Gift size={18} />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-[#2B1B14]">Task Reward</h4>
+              <p className="text-[10px] text-[#8C7A6F]">Get ₹100+ Free</p>
+            </div>
           </div>
-          <span className="text-gray-400 text-xs font-medium tracking-wide mt-1.5">ID:13436935</span>
+          {!isAuthenticated && <Lock size={12} className="text-[#A8988C]" />}
         </div>
 
-        {/* Right: Recharge & Withdraw Buttons */}
-        <div className="flex flex-col items-center gap-2">
-          <button
-            onClick={() => showToast('Recharge Clicked')}
-            className="w-28 py-2 bg-gradient-to-r from-[#2196f3] to-[#00b0ff] text-white text-xs font-bold rounded-full shadow-md shadow-blue-500/20 active:scale-95 transition-transform duration-150 cursor-pointer"
+        {/* Daily Check-In */}
+        <div
+          onClick={() => handleGuardedAction('Daily Check-in')}
+          className="bg-white rounded-2xl p-2.5 border border-[#EBE3D7] shadow-xs flex items-center justify-between cursor-pointer active:scale-[0.98] transition-all hover:border-[#00c08b]/40 group"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <CalendarCheck size={18} />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-[#2B1B14]">Check In</h4>
+              <p className="text-[10px] text-[#8C7A6F]">Daily Bonus</p>
+            </div>
+          </div>
+          {!isAuthenticated && <Lock size={12} className="text-[#A8988C]" />}
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 6. GAME CARDS 2x2 GRID (CLICK INTERCEPTED FOR GUESTS)                     */}
+      {/* ========================================================================= */}
+      <div className="w-full px-3.5">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1.5">
+            <Flame size={15} className="text-[#8B3A13]" />
+            <h3 className="text-xs font-bold text-[#2B1B14] uppercase tracking-wider">
+              Popular Games
+            </h3>
+          </div>
+          <span className="text-[10px] font-semibold text-[#8B3A13]">Instant Payouts</span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          {/* CARD 1: Fast-Parity */}
+          <div
+            onClick={() => handleGuardedAction('Fast-Parity Game')}
+            className="h-[185px] rounded-2xl bg-gradient-to-b from-[#38bdf8] to-[#0284c7] p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-all duration-150 shadow-md relative overflow-hidden group"
           >
-            Recharge
-          </button>
-          <button
-            onClick={() => showToast('Withdraw Clicked')}
-            className="w-28 py-2 bg-[#eceff2] hover:bg-[#e2e8f0] text-gray-600 text-xs font-bold rounded-full active:scale-95 transition-transform duration-150 cursor-pointer"
+            {/* Lock Overlay if guest */}
+            {!isAuthenticated && (
+              <div className="absolute top-2 right-2 z-20 bg-black/30 backdrop-blur-xs w-6 h-6 rounded-full flex items-center justify-center text-white/90">
+                <Lock size={11} />
+              </div>
+            )}
+
+            {/* Badge */}
+            <div className="self-start px-2 py-0.5 rounded-full bg-black/25 text-white text-[9px] font-bold tracking-wider uppercase">
+              30 Sec
+            </div>
+
+            {/* Graphic Discs */}
+            <div className="flex flex-col items-center justify-center my-auto group-hover:scale-105 transition-transform">
+              <div className="flex items-center justify-center -space-x-2">
+                <div className="w-10 h-10 rounded-full bg-[#ef4444] border-2 border-white/40 flex items-center justify-center shadow-md">
+                  <span className="text-white font-black text-base leading-none">5</span>
+                </div>
+                <div className="w-11 h-11 rounded-full bg-[#1e40af] border-2 border-white/60 flex items-center justify-center shadow-lg z-10">
+                  <Flame size={18} className="text-yellow-300" />
+                </div>
+                <div className="w-10 h-10 rounded-full bg-[#10b981] border-2 border-white/40 flex items-center justify-center shadow-md">
+                  <span className="text-white font-black text-base leading-none">2</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full text-center">
+              <span className="text-white font-black text-base tracking-tight drop-shadow-xs">
+                Fast-Parity
+              </span>
+            </div>
+          </div>
+
+          {/* CARD 2: MineSweeper */}
+          <div
+            onClick={() => handleGuardedAction('MineSweeper Game')}
+            className="h-[185px] rounded-2xl bg-gradient-to-b from-[#f87171] to-[#dc2626] p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-all duration-150 shadow-md relative overflow-hidden group"
           >
-            Withdraw
-          </button>
-        </div>
-      </div>
-
-      {/* 3. Task Reward & Check In Row */}
-      <div className="w-full px-6 py-3 flex items-center justify-between">
-        {/* Task reward */}
-        <div
-          onClick={() => showToast('Task reward opened')}
-          className="flex items-center gap-2.5 cursor-pointer active:scale-95 transition-transform duration-150"
-        >
-          <div className="w-9 h-9 rounded-full bg-[#f59e0b] flex items-center justify-center shadow-xs">
-            <svg viewBox="0 0 24 24" className="w-5 h-5 text-white" fill="none">
-              <rect x="3" y="9" width="18" height="12" rx="2" fill="currentColor" />
-              <rect x="2" y="6" width="20" height="4" rx="1.5" fill="currentColor" opacity="0.9" />
-              <path d="M12 6v15" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" />
-              <path d="M3 13.5h18" stroke="#f59e0b" strokeWidth="2" />
-              <path d="M12 6C10.5 3.5 8 4 8 5.5C8 7 12 6.5 12 6Z" fill="currentColor" />
-              <path d="M12 6C13.5 3.5 16 4 16 5.5C16 7 12 6.5 12 6Z" fill="currentColor" />
-            </svg>
-          </div>
-          <span className="text-gray-700 text-xs font-bold tracking-tight">Task reward</span>
-        </div>
-
-        {/* Check in */}
-        <div
-          onClick={() => showToast('Daily Check-in successful!')}
-          className="flex items-center gap-2.5 cursor-pointer active:scale-95 transition-transform duration-150"
-        >
-          <div className="w-9 h-9 rounded-full bg-[#00c08b] flex items-center justify-center shadow-xs">
-            <svg viewBox="0 0 24 24" className="w-5 h-5 text-white" fill="none">
-              <rect x="3.5" y="4.5" width="17" height="16" rx="3" fill="currentColor" />
-              <rect x="3.5" y="4.5" width="17" height="5" rx="2" fill="white" opacity="0.25" />
-              <path d="M8 2.5v3M16 2.5v3" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-              <path d="M8 13.5l2.5 2.5 5.5-5.5" stroke="#00c08b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <span className="text-gray-700 text-xs font-bold tracking-tight">Check in</span>
-        </div>
-      </div>
-
-      {/* 4. Game Cards 2x2 Grid */}
-      <div className="w-full px-3.5 pt-1 grid grid-cols-2 gap-3.5">
-        {/* CARD 1: Fast-Parity */}
-        <div
-          onClick={() => showToast('Opening Fast-Parity')}
-          className="h-[188px] rounded-2xl bg-[#4ec5dc] p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-transform duration-150 shadow-xs relative overflow-hidden"
-        >
-          {/* Top miniature rocket */}
-          <div className="absolute top-2 left-1/2 -translate-x-1/2">
-            <svg viewBox="0 0 32 32" className="w-6 h-6 transform -rotate-12">
-              <path d="M10 24L5 29C5 29 8 28 11 25Z" fill="#f97316" />
-              <path d="M11 25L7 28C7 28 9 27 12 25Z" fill="#facc15" />
-              <path d="M12 18L6 22L12 23Z" fill="#ef4444" />
-              <path d="M18 12L22 6L23 12Z" fill="#ef4444" />
-              <path d="M12 22C11 17 14 10 24 7C21 17 15 21 12 22Z" fill="#3b82f6" />
-              <circle cx="17" cy="15" r="3" fill="#60a5fa" stroke="white" strokeWidth="1.2" />
-            </svg>
-          </div>
-
-          {/* Graphic: 3 Discs */}
-          <div className="flex flex-col items-center justify-center my-auto pt-4">
-            <div className="flex items-center justify-center -space-x-2">
-              {/* Red 5 */}
-              <div className="w-10 h-10 rounded-full bg-[#e53935] flex items-center justify-center shadow-md z-0">
-                <span className="text-white font-black text-lg leading-none">5</span>
+            {!isAuthenticated && (
+              <div className="absolute top-2 right-2 z-20 bg-black/30 backdrop-blur-xs w-6 h-6 rounded-full flex items-center justify-center text-white/90">
+                <Lock size={11} />
               </div>
-              {/* Blue Lightning */}
-              <div className="w-11 h-11 rounded-full bg-[#1a56db] flex items-center justify-center shadow-lg z-10">
-                <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="currentColor">
-                  <path d="M13 2L4 14h7l-2 8 11-12h-7l2-8z" />
-                </svg>
-              </div>
-              {/* Green 2 */}
-              <div className="w-10 h-10 rounded-full bg-[#057a55] flex items-center justify-center shadow-md z-0">
-                <span className="text-white font-black text-lg leading-none">2</span>
-              </div>
-            </div>
+            )}
 
-            {/* 30sec Pill */}
-            <div className="mt-2 px-3 py-0.5 rounded-full bg-black/20 text-white text-[10px] font-medium tracking-wide">
-              30sec
-            </div>
-          </div>
-
-          {/* Title */}
-          <span className="text-white font-extrabold text-[17px] tracking-tight mb-0.5">Fast-Parity</span>
-        </div>
-
-        {/* CARD 2: MineSweeper */}
-        <div
-          onClick={() => showToast('Opening MineSweeper')}
-          className="h-[188px] rounded-2xl bg-[#f87171] p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-transform duration-150 shadow-xs relative overflow-hidden"
-        >
-          {/* Graphic: Classic Bomb */}
-          <div className="flex flex-col items-center justify-center my-auto pt-1">
-            <div className="w-16 h-16 relative flex items-center justify-center">
-              <svg viewBox="0 0 64 64" className="w-full h-full drop-shadow-md">
-                {/* Red & Yellow Sparks */}
-                <path d="M52 10L56 6" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" />
-                <path d="M47 5L47 1" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" />
-                <path d="M58 13L63 13" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" />
-                <path d="M55 17L60 20" stroke="#facc15" strokeWidth="2" strokeLinecap="round" />
-                <circle cx="51" cy="11" r="2.5" fill="#facc15" />
-
-                {/* Fuse */}
-                <path d="M37 22C42 16 45 13 51 11" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" fill="none" />
-
-                {/* Fuse Collar */}
-                <rect x="30" y="19" width="10" height="5" rx="1.5" fill="#475569" />
-
-                {/* Bomb Body */}
-                <circle cx="32" cy="38" r="20" fill="#232b35" />
-                {/* Specular Highlight */}
-                <path d="M22 26C26 24 31 25 34 27" stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity="0.35" />
-                <circle cx="21" cy="31" r="2" fill="white" opacity="0.25" />
-              </svg>
-            </div>
-
-            {/* Instant Pill */}
-            <div className="mt-1 px-3 py-0.5 rounded-full bg-black/20 text-white text-[10px] font-medium tracking-wide">
+            <div className="self-start px-2 py-0.5 rounded-full bg-black/25 text-white text-[9px] font-bold tracking-wider uppercase">
               Instant
             </div>
-          </div>
 
-          {/* Title */}
-          <span className="text-white font-extrabold text-[17px] tracking-tight mb-0.5">MineSweeper</span>
-        </div>
-
-        {/* CARD 3: Andar Bahar */}
-        <div
-          onClick={() => showToast('Opening Andar Bahar')}
-          className="h-[188px] rounded-2xl bg-[#f59e0b] p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-transform duration-150 shadow-xs relative overflow-hidden"
-        >
-          {/* Graphic: 3 Playing Cards */}
-          <div className="relative flex items-center justify-center my-auto w-full h-24">
-            {/* Card 1: Back (FieWin blue) */}
-            <div className="absolute left-3 transform -rotate-12 w-12 h-16 bg-[#103778] rounded-md shadow-md border border-blue-900/40 flex items-center justify-center p-0.5 overflow-hidden z-0">
-              <span className="text-[9px] font-black text-white tracking-tighter">FieWin</span>
-            </div>
-
-            {/* Card 2: 3 of Hearts */}
-            <div className="absolute left-10 transform -rotate-3 w-12 h-16 bg-white rounded-md shadow-lg border border-gray-100 flex flex-col justify-between p-1 z-10">
-              <div className="flex flex-col items-start leading-none">
-                <span className="text-[11px] font-black text-[#dc2626] leading-none">3</span>
-                <span className="text-[10px] text-[#dc2626] leading-none mt-0.5">♥</span>
-              </div>
-              <div className="self-center text-xs text-[#dc2626] leading-none">♥</div>
-              <div className="flex flex-col items-end leading-none rotate-180">
-                <span className="text-[11px] font-black text-[#dc2626] leading-none">3</span>
-                <span className="text-[10px] text-[#dc2626] leading-none mt-0.5">♥</span>
+            {/* Bomb Graphic */}
+            <div className="flex flex-col items-center justify-center my-auto group-hover:scale-105 transition-transform">
+              <div className="w-15 h-15 relative flex items-center justify-center">
+                <svg viewBox="0 0 64 64" className="w-full h-full drop-shadow-md">
+                  <path d="M52 10L56 6" stroke="#fef08a" strokeWidth="2.5" strokeLinecap="round" />
+                  <circle cx="51" cy="11" r="2.5" fill="#facc15" />
+                  <path d="M37 22C42 16 45 13 51 11" stroke="#facc15" strokeWidth="3" strokeLinecap="round" fill="none" />
+                  <rect x="30" y="19" width="10" height="5" rx="1.5" fill="#334155" />
+                  <circle cx="32" cy="38" r="20" fill="#1e293b" />
+                  <path d="M22 26C26 24 31 25 34 27" stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity="0.4" />
+                </svg>
               </div>
             </div>
 
-            {/* Card 3: 9 of Clubs */}
-            <div className="absolute right-3.5 transform rotate-6 w-12 h-16 bg-white rounded-md shadow-lg border border-gray-100 flex flex-col justify-between p-1 z-20">
-              <div className="flex flex-col items-start leading-none">
-                <span className="text-[11px] font-black text-[#1e293b] leading-none">9</span>
-                <span className="text-[10px] text-[#1e293b] leading-none mt-0.5">♣</span>
-              </div>
-              <div className="self-center text-xs text-[#1e293b] leading-none">♣</div>
-              <div className="flex flex-col items-end leading-none rotate-180">
-                <span className="text-[11px] font-black text-[#1e293b] leading-none">9</span>
-                <span className="text-[10px] text-[#1e293b] leading-none mt-0.5">♣</span>
-              </div>
+            <div className="w-full text-center">
+              <span className="text-white font-black text-base tracking-tight drop-shadow-xs">
+                MineSweeper
+              </span>
             </div>
           </div>
 
-          {/* Title */}
-          <span className="text-white font-extrabold text-[17px] tracking-tight mb-0.5">Andar Bahar</span>
-        </div>
+          {/* CARD 3: Andar Bahar */}
+          <div
+            onClick={() => handleGuardedAction('Andar Bahar Game')}
+            className="h-[185px] rounded-2xl bg-gradient-to-b from-[#fbbf24] to-[#d97706] p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-all duration-150 shadow-md relative overflow-hidden group"
+          >
+            {!isAuthenticated && (
+              <div className="absolute top-2 right-2 z-20 bg-black/30 backdrop-blur-xs w-6 h-6 rounded-full flex items-center justify-center text-white/90">
+                <Lock size={11} />
+              </div>
+            )}
 
-        {/* CARD 4: Crash */}
-        <div
-          onClick={() => showToast('Opening Crash')}
-          className="h-[188px] rounded-2xl bg-[#41cca2] p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-transform duration-150 shadow-xs relative overflow-hidden"
-        >
-          {/* Graphic: Rocket Flying Up */}
-          <div className="relative flex items-center justify-center my-auto w-full h-24">
-            <div className="w-14 h-18 relative flex items-center justify-center">
-              <svg viewBox="0 0 60 72" className="w-full h-full drop-shadow-md">
-                {/* Exhaust Flame */}
-                <path d="M25 54C25 65 30 72 30 72C30 72 35 65 35 54Z" fill="#ef4444" />
-                <path d="M27 54C27 61 30 66 30 66C30 61 33 61 33 54Z" fill="#facc15" />
+            <div className="self-start px-2 py-0.5 rounded-full bg-black/25 text-white text-[9px] font-bold tracking-wider uppercase">
+              Classic
+            </div>
 
-                {/* Left Wing Fin */}
-                <path d="M21 38L10 52C10 52 17 54 22 49Z" fill="#ef4444" />
-                {/* Right Wing Fin */}
-                <path d="M39 38L50 52C50 52 43 54 38 49Z" fill="#ef4444" />
+            {/* Cards Graphic */}
+            <div className="relative flex items-center justify-center my-auto w-full h-20 group-hover:scale-105 transition-transform">
+              <div className="absolute left-4 transform -rotate-12 w-11 h-15 bg-[#103778] rounded-lg shadow-md border border-white/20 flex items-center justify-center">
+                <span className="text-[8px] font-black text-white">JANNAT</span>
+              </div>
+              <div className="absolute left-11 transform -rotate-3 w-11 h-15 bg-white rounded-lg shadow-lg border border-gray-100 flex flex-col justify-between p-1 z-10">
+                <span className="text-[10px] font-black text-[#dc2626]">3♥</span>
+                <span className="self-center text-xs text-[#dc2626]">♥</span>
+              </div>
+              <div className="absolute right-4 transform rotate-8 w-11 h-15 bg-white rounded-lg shadow-lg border border-gray-100 flex flex-col justify-between p-1 z-20">
+                <span className="text-[10px] font-black text-[#1e293b]">9♣</span>
+                <span className="self-center text-xs text-[#1e293b]">♣</span>
+              </div>
+            </div>
 
-                {/* Main Fuselage */}
-                <path d="M30 6C23 18 20 34 21 54H39C40 34 37 18 30 6Z" fill="white" />
-
-                {/* Red Nose Cone */}
-                <path d="M30 6C26 14 24 20 24 23H36C36 20 34 14 30 6Z" fill="#ef4444" />
-
-                {/* Blue Round Window */}
-                <circle cx="30" cy="34" r="7" fill="#3b82f6" stroke="#1d4ed8" strokeWidth="2" />
-                {/* Window Reflection */}
-                <path d="M27 31C28 29.5 31 29.5 33 30.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
+            <div className="w-full text-center">
+              <span className="text-white font-black text-base tracking-tight drop-shadow-xs">
+                Andar Bahar
+              </span>
             </div>
           </div>
 
-          {/* Title */}
-          <span className="text-white font-extrabold text-[17px] tracking-tight mb-0.5">Crash</span>
+          {/* CARD 4: Crash */}
+          <div
+            onClick={() => handleGuardedAction('Crash Game')}
+            className="h-[185px] rounded-2xl bg-gradient-to-b from-[#34d399] to-[#059669] p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-all duration-150 shadow-md relative overflow-hidden group"
+          >
+            {!isAuthenticated && (
+              <div className="absolute top-2 right-2 z-20 bg-black/30 backdrop-blur-xs w-6 h-6 rounded-full flex items-center justify-center text-white/90">
+                <Lock size={11} />
+              </div>
+            )}
+
+            <div className="self-start px-2 py-0.5 rounded-full bg-black/25 text-white text-[9px] font-bold tracking-wider uppercase">
+              100x Multi
+            </div>
+
+            {/* Rocket Graphic */}
+            <div className="relative flex items-center justify-center my-auto w-full h-20 group-hover:scale-105 transition-transform">
+              <div className="w-13 h-16 relative flex items-center justify-center">
+                <svg viewBox="0 0 60 72" className="w-full h-full drop-shadow-md">
+                  <path d="M25 54C25 65 30 72 30 72C30 72 35 65 35 54Z" fill="#f97316" />
+                  <path d="M21 38L10 52C10 52 17 54 22 49Z" fill="#ef4444" />
+                  <path d="M39 38L50 52C50 52 43 54 38 49Z" fill="#ef4444" />
+                  <path d="M30 6C23 18 20 34 21 54H39C40 34 37 18 30 6Z" fill="white" />
+                  <path d="M30 6C26 14 24 20 24 23H36C36 20 34 14 30 6Z" fill="#ef4444" />
+                  <circle cx="30" cy="34" r="6" fill="#0284c7" stroke="white" strokeWidth="1.5" />
+                </svg>
+              </div>
+            </div>
+
+            <div className="w-full text-center">
+              <span className="text-white font-black text-base tracking-tight drop-shadow-xs">
+                Crash
+              </span>
+            </div>
+          </div>
         </div>
       </div>
+
     </div>
   );
 };

@@ -1,25 +1,40 @@
+import React from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import App from '../App';
 import Home from '../pages/Home';
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
+import PublicRoute from './PublicRoute';
 
 export const routes = createBrowserRouter([
+  // Public/Guest-only routes (redirects to '/' if already logged in)
   {
-    path: "/login",
-    element: <Login />,
+    element: <PublicRoute />,
+    children: [
+      {
+        path: '/login',
+        element: <Login />,
+      },
+      {
+        path: '/register',
+        element: <Register />,
+      },
+    ],
   },
-  {
-    path: "/register",
-    element: <Register />,
-  },
+  // Main App (Home page accessible to public, feature actions intercepted for unauthenticated visitors)
   {
     element: <App />,
     children: [
       {
-        path: "/",
+        path: '/',
+        element: <Home />,
+      },
+      {
+        path: '*',
         element: <Home />,
       },
     ],
   },
 ]);
+
+export default routes;
