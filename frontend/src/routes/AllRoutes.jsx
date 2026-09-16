@@ -10,7 +10,6 @@ import PublicRoute from './PublicRoute';
 export const routes = createBrowserRouter([
   // Public/Guest-only routes (redirects to '/' if already logged in)
   {
-<<<<<<< HEAD
     element: <PublicRoute />,
     children: [
       {
@@ -32,6 +31,10 @@ export const routes = createBrowserRouter([
         element: <Home />,
       },
       {
+        path: '/parity',
+        element: <Parity />,
+      },
+      {
         path: '*',
         element: <Home />,
       },
@@ -40,25 +43,3 @@ export const routes = createBrowserRouter([
 ]);
 
 export default routes;
-=======
-    element: <App />,
-    children: [
-      {
-        path: "/login",
-        element: <Login />,
-      },
-      {
-        path: "/register",
-        element: <Register />,
-      },
-      {
-        path: "/",
-        element: <Home />
-      },
-      {
-        path: "/parity",
-        element: <Parity />
-      }
-    ]
-  }])
->>>>>>> 810bd05415434897c150d5079d9d695f1696213a
