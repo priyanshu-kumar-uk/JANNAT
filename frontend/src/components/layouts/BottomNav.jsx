@@ -7,25 +7,11 @@ const BottomNav = ({ onAuthRequired, onOpenProfile }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated } = useSelector((state) => state.auth);
-
-  // Sync active tab with current URL pathname
-  const getActiveTab = () => {
-    if (location.pathname === '/recharge') return 'recharge';
-    if (location.pathname === '/invite') return 'invite';
-    if (location.pathname === '/account') return 'account';
-    return 'fiewin';
-  };
-
-  const activeTab = getActiveTab();
+  const [activeTab, setActiveTab] = React.useState('fiewin');
 
   const handleTabClick = (tabId) => {
     if (tabId === 'fiewin') {
       navigate('/');
-      return;
-    }
-
-    if (tabId === 'recharge') {
-      navigate('/recharge');
       return;
     }
 
@@ -38,9 +24,8 @@ const BottomNav = ({ onAuthRequired, onOpenProfile }) => {
       return;
     }
 
-    if (tabId === 'account') {
+    if (tabId === 'my') {
       if (onOpenProfile) onOpenProfile();
-      return;
     }
 
     navigate(`/${tabId}`);

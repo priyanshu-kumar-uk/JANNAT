@@ -277,7 +277,7 @@ const Home = () => {
           <div>
             {isAuthenticated ? (
               <button
-                onClick={() => setShowProfileModal(true)}
+                onClick={() => navigate('/my')}
                 className="flex items-center gap-1.5 bg-[#FAF6F0] hover:bg-[#F2ECE2] border border-[#E2D8CC] px-2.5 py-1 rounded-full text-xs font-semibold text-[#4A382F] transition-colors cursor-pointer"
               >
                 <div className="w-4 h-4 rounded-full bg-[#8B3A13] text-white text-[9px] font-bold flex items-center justify-center">
@@ -373,7 +373,7 @@ const Home = () => {
                 Recharge
               </button>
               <button
-                onClick={() => handleGuardedAction('Withdraw')}
+                onClick={() => handleGuardedAction('Withdraw', () => navigate('/my'))}
                 className="w-26 py-1.5 bg-white/15 hover:bg-white/20 border border-white/20 text-white text-xs font-bold rounded-full active:scale-95 transition-transform cursor-pointer text-center"
               >
                 Withdraw
@@ -440,37 +440,31 @@ const Home = () => {
           {/* CARD 1: Fast-Parity */}
           <div
             onClick={() => handleGuardedAction('Fast-Parity Game', () => navigate('/parity'))}
-            className="h-[185px] rounded-2xl bg-gradient-to-b from-[#38bdf8] to-[#0284c7] p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-all duration-150 shadow-md relative overflow-hidden group"
+            className="h-[185px] rounded-2xl p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-all duration-150 shadow-md relative overflow-hidden group border border-[#2D1E16] bg-[#0E1520]"
           >
+            {/* Banner Image */}
+            <img
+              src="/banners/Gemini_Generated_Image_d2nzxqd2nzxqd2nz.png"
+              alt="Fast-Parity"
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+            {/* Contrast Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
+
             {/* Lock Overlay if guest */}
             {!isAuthenticated && (
-              <div className="absolute top-2 right-2 z-20 bg-black/30 backdrop-blur-xs w-6 h-6 rounded-full flex items-center justify-center text-white/90">
+              <div className="absolute top-2 right-2 z-20 bg-black/50 backdrop-blur-xs w-6 h-6 rounded-full flex items-center justify-center text-white/90 border border-white/20">
                 <Lock size={11} />
               </div>
             )}
 
             {/* Badge */}
-            <div className="self-start px-2 py-0.5 rounded-full bg-black/25 text-white text-[9px] font-bold tracking-wider uppercase">
+            <div className="relative z-10 self-start px-2 py-0.5 rounded-full bg-black/50 backdrop-blur-xs text-white text-[9px] font-bold tracking-wider uppercase border border-white/20">
               30 Sec
             </div>
 
-            {/* Graphic Discs */}
-            <div className="flex flex-col items-center justify-center my-auto group-hover:scale-105 transition-transform">
-              <div className="flex items-center justify-center -space-x-2">
-                <div className="w-10 h-10 rounded-full bg-[#ef4444] border-2 border-white/40 flex items-center justify-center shadow-md">
-                  <span className="text-white font-black text-base leading-none">5</span>
-                </div>
-                <div className="w-11 h-11 rounded-full bg-[#1e40af] border-2 border-white/60 flex items-center justify-center shadow-lg z-10">
-                  <Flame size={18} className="text-yellow-300" />
-                </div>
-                <div className="w-10 h-10 rounded-full bg-[#10b981] border-2 border-white/40 flex items-center justify-center shadow-md">
-                  <span className="text-white font-black text-base leading-none">2</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="w-full text-center">
-              <span className="text-white font-black text-base tracking-tight drop-shadow-xs">
+            <div className="relative z-10 w-full text-center pb-0.5">
+              <span className="text-white font-black text-base tracking-tight drop-shadow-md">
                 Fast-Parity
               </span>
             </div>
@@ -479,34 +473,29 @@ const Home = () => {
           {/* CARD 2: MineSweeper */}
           <div
             onClick={() => handleGuardedAction('MineSweeper Game')}
-            className="h-[185px] rounded-2xl bg-gradient-to-b from-[#f87171] to-[#dc2626] p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-all duration-150 shadow-md relative overflow-hidden group"
+            className="h-[185px] rounded-2xl p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-all duration-150 shadow-md relative overflow-hidden group border border-[#2D1E16] bg-[#1E0D0D]"
           >
+            {/* Banner Image */}
+            <img
+              src="/banners/sweeper.png"
+              alt="MineSweeper"
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+            {/* Contrast Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
+
             {!isAuthenticated && (
-              <div className="absolute top-2 right-2 z-20 bg-black/30 backdrop-blur-xs w-6 h-6 rounded-full flex items-center justify-center text-white/90">
+              <div className="absolute top-2 right-2 z-20 bg-black/50 backdrop-blur-xs w-6 h-6 rounded-full flex items-center justify-center text-white/90 border border-white/20">
                 <Lock size={11} />
               </div>
             )}
 
-            <div className="self-start px-2 py-0.5 rounded-full bg-black/25 text-white text-[9px] font-bold tracking-wider uppercase">
+            <div className="relative z-10 self-start px-2 py-0.5 rounded-full bg-black/50 backdrop-blur-xs text-white text-[9px] font-bold tracking-wider uppercase border border-white/20">
               Instant
             </div>
 
-            {/* Bomb Graphic */}
-            <div className="flex flex-col items-center justify-center my-auto group-hover:scale-105 transition-transform">
-              <div className="w-15 h-15 relative flex items-center justify-center">
-                <svg viewBox="0 0 64 64" className="w-full h-full drop-shadow-md">
-                  <path d="M52 10L56 6" stroke="#fef08a" strokeWidth="2.5" strokeLinecap="round" />
-                  <circle cx="51" cy="11" r="2.5" fill="#facc15" />
-                  <path d="M37 22C42 16 45 13 51 11" stroke="#facc15" strokeWidth="3" strokeLinecap="round" fill="none" />
-                  <rect x="30" y="19" width="10" height="5" rx="1.5" fill="#334155" />
-                  <circle cx="32" cy="38" r="20" fill="#1e293b" />
-                  <path d="M22 26C26 24 31 25 34 27" stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity="0.4" />
-                </svg>
-              </div>
-            </div>
-
-            <div className="w-full text-center">
-              <span className="text-white font-black text-base tracking-tight drop-shadow-xs">
+            <div className="relative z-10 w-full text-center pb-0.5">
+              <span className="text-white font-black text-base tracking-tight drop-shadow-md">
                 MineSweeper
               </span>
             </div>
@@ -515,35 +504,29 @@ const Home = () => {
           {/* CARD 3: Andar Bahar */}
           <div
             onClick={() => handleGuardedAction('Andar Bahar Game')}
-            className="h-[185px] rounded-2xl bg-gradient-to-b from-[#fbbf24] to-[#d97706] p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-all duration-150 shadow-md relative overflow-hidden group"
+            className="h-[185px] rounded-2xl p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-all duration-150 shadow-md relative overflow-hidden group border border-[#2D1E16] bg-[#1E1208]"
           >
+            {/* Banner Image */}
+            <img
+              src="/banners/Andar%20bahr.png"
+              alt="Andar Bahar"
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+            {/* Contrast Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
+
             {!isAuthenticated && (
-              <div className="absolute top-2 right-2 z-20 bg-black/30 backdrop-blur-xs w-6 h-6 rounded-full flex items-center justify-center text-white/90">
+              <div className="absolute top-2 right-2 z-20 bg-black/50 backdrop-blur-xs w-6 h-6 rounded-full flex items-center justify-center text-white/90 border border-white/20">
                 <Lock size={11} />
               </div>
             )}
 
-            <div className="self-start px-2 py-0.5 rounded-full bg-black/25 text-white text-[9px] font-bold tracking-wider uppercase">
+            <div className="relative z-10 self-start px-2 py-0.5 rounded-full bg-black/50 backdrop-blur-xs text-white text-[9px] font-bold tracking-wider uppercase border border-white/20">
               Classic
             </div>
 
-            {/* Cards Graphic */}
-            <div className="relative flex items-center justify-center my-auto w-full h-20 group-hover:scale-105 transition-transform">
-              <div className="absolute left-4 transform -rotate-12 w-11 h-15 bg-[#103778] rounded-lg shadow-md border border-white/20 flex items-center justify-center">
-                <span className="text-[8px] font-black text-white">JANNAT</span>
-              </div>
-              <div className="absolute left-11 transform -rotate-3 w-11 h-15 bg-white rounded-lg shadow-lg border border-gray-100 flex flex-col justify-between p-1 z-10">
-                <span className="text-[10px] font-black text-[#dc2626]">3♥</span>
-                <span className="self-center text-xs text-[#dc2626]">♥</span>
-              </div>
-              <div className="absolute right-4 transform rotate-8 w-11 h-15 bg-white rounded-lg shadow-lg border border-gray-100 flex flex-col justify-between p-1 z-20">
-                <span className="text-[10px] font-black text-[#1e293b]">9♣</span>
-                <span className="self-center text-xs text-[#1e293b]">♣</span>
-              </div>
-            </div>
-
-            <div className="w-full text-center">
-              <span className="text-white font-black text-base tracking-tight drop-shadow-xs">
+            <div className="relative z-10 w-full text-center pb-0.5">
+              <span className="text-white font-black text-base tracking-tight drop-shadow-md">
                 Andar Bahar
               </span>
             </div>
@@ -552,34 +535,29 @@ const Home = () => {
           {/* CARD 4: Crash */}
           <div
             onClick={() => handleGuardedAction('Crash Game')}
-            className="h-[185px] rounded-2xl bg-gradient-to-b from-[#34d399] to-[#059669] p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-all duration-150 shadow-md relative overflow-hidden group"
+            className="h-[185px] rounded-2xl p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-all duration-150 shadow-md relative overflow-hidden group border border-[#2D1E16] bg-[#0A1A14]"
           >
+            {/* Banner Image */}
+            <img
+              src="/banners/Crash.png"
+              alt="Crash"
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+            {/* Contrast Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
+
             {!isAuthenticated && (
-              <div className="absolute top-2 right-2 z-20 bg-black/30 backdrop-blur-xs w-6 h-6 rounded-full flex items-center justify-center text-white/90">
+              <div className="absolute top-2 right-2 z-20 bg-black/50 backdrop-blur-xs w-6 h-6 rounded-full flex items-center justify-center text-white/90 border border-white/20">
                 <Lock size={11} />
               </div>
             )}
 
-            <div className="self-start px-2 py-0.5 rounded-full bg-black/25 text-white text-[9px] font-bold tracking-wider uppercase">
+            <div className="relative z-10 self-start px-2 py-0.5 rounded-full bg-black/50 backdrop-blur-xs text-white text-[9px] font-bold tracking-wider uppercase border border-white/20">
               100x Multi
             </div>
 
-            {/* Rocket Graphic */}
-            <div className="relative flex items-center justify-center my-auto w-full h-20 group-hover:scale-105 transition-transform">
-              <div className="w-13 h-16 relative flex items-center justify-center">
-                <svg viewBox="0 0 60 72" className="w-full h-full drop-shadow-md">
-                  <path d="M25 54C25 65 30 72 30 72C30 72 35 65 35 54Z" fill="#f97316" />
-                  <path d="M21 38L10 52C10 52 17 54 22 49Z" fill="#ef4444" />
-                  <path d="M39 38L50 52C50 52 43 54 38 49Z" fill="#ef4444" />
-                  <path d="M30 6C23 18 20 34 21 54H39C40 34 37 18 30 6Z" fill="white" />
-                  <path d="M30 6C26 14 24 20 24 23H36C36 20 34 14 30 6Z" fill="#ef4444" />
-                  <circle cx="30" cy="34" r="6" fill="#0284c7" stroke="white" strokeWidth="1.5" />
-                </svg>
-              </div>
-            </div>
-
-            <div className="w-full text-center">
-              <span className="text-white font-black text-base tracking-tight drop-shadow-xs">
+            <div className="relative z-10 w-full text-center pb-0.5">
+              <span className="text-white font-black text-base tracking-tight drop-shadow-md">
                 Crash
               </span>
             </div>

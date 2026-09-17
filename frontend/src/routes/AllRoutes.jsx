@@ -5,6 +5,7 @@ import Home from '../pages/game/Home';
 import Parity from '../pages/game/Parity';
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
+import Dashboard from '../pages/user/Dashboard';
 import PublicRoute from './PublicRoute';
 import Recharge from '../pages/recharge/Recharge';
 
