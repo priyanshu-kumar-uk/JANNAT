@@ -367,7 +367,7 @@ const Home = () => {
             {/* Right Action Buttons */}
             <div className="flex flex-col gap-2 shrink-0">
               <button
-                onClick={() => handleGuardedAction('Recharge')}
+                onClick={() => handleGuardedAction('Recharge', () => navigate('/recharge'))}
                 className="w-26 py-1.5 bg-gradient-to-r from-[#2196f3] to-[#00b0ff] text-white text-xs font-bold rounded-full shadow-md shadow-blue-500/25 active:scale-95 transition-transform cursor-pointer text-center"
               >
                 Recharge

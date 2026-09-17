@@ -6,6 +6,7 @@ import Parity from '../pages/game/Parity';
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
 import PublicRoute from './PublicRoute';
+import Recharge from '../pages/recharge/Recharge';
 
 export const routes = createBrowserRouter([
   // Public/Guest-only routes (redirects to '/' if already logged in)
@@ -35,9 +36,9 @@ export const routes = createBrowserRouter([
         element: <Parity />,
       },
       {
-        path: '*',
-        element: <Home />,
-      },
+        path: "/recharge",
+        element: <Recharge />
+      }
     ],
   },
 ]);

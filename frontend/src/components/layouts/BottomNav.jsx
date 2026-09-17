@@ -1,18 +1,31 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { Home, Users, Zap, User } from 'lucide-react';
+import { Home, Users, User } from 'lucide-react';
 
 const BottomNav = ({ onAuthRequired, onOpenProfile }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated } = useSelector((state) => state.auth);
-  const [activeTab, setActiveTab] = React.useState('fiewin');
+
+  // Sync active tab with current URL pathname
+  const getActiveTab = () => {
+    if (location.pathname === '/recharge') return 'recharge';
+    if (location.pathname === '/invite') return 'invite';
+    if (location.pathname === '/account') return 'account';
+    return 'fiewin';
+  };
+
+  const activeTab = getActiveTab();
 
   const handleTabClick = (tabId) => {
-    setActiveTab(tabId);
-
     if (tabId === 'fiewin') {
       navigate('/');
+      return;
+    }
+
+    if (tabId === 'recharge') {
+      navigate('/recharge');
       return;
     }
 
@@ -25,9 +38,12 @@ const BottomNav = ({ onAuthRequired, onOpenProfile }) => {
       return;
     }
 
-    if (tabId === 'my') {
+    if (tabId === 'account') {
       if (onOpenProfile) onOpenProfile();
+      return;
     }
+
+    navigate(`/${tabId}`);
   };
 
   const tabs = [
@@ -64,18 +80,21 @@ const BottomNav = ({ onAuthRequired, onOpenProfile }) => {
       label: 'Recharge',
       icon: (isActive) => (
         <div className="relative">
-          <Zap
-            size={20}
-            className={`transition-transform duration-200 ${
-              isActive ? 'text-[#8B3A13] scale-110 stroke-[2.5]' : 'text-[#8C7A6F] stroke-[1.8]'
+          <div
+            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-transform duration-200 ${
+              isActive
+                ? 'border-[#0088ff] text-[#0088ff] scale-110'
+                : 'border-[#8C7A6F] text-[#8C7A6F]'
             }`}
-          />
+          >
+            <span className="text-[10px] font-black leading-none">₹</span>
+          </div>
         </div>
       ),
     },
     {
-      id: 'my',
-      label: 'My',
+      id: 'account',
+      label: 'Account',
       icon: (isActive) => (
         <div className="relative">
           <User
@@ -101,7 +120,13 @@ const BottomNav = ({ onAuthRequired, onOpenProfile }) => {
           >
             {/* Active Pill Glow */}
             {isActive && (
-              <span className="absolute top-0 w-8 h-0.5 bg-[#8B3A13] rounded-full shadow-[0_2px_8px_#8B3A13]" />
+              <span
+                className={`absolute top-0 w-8 h-0.5 rounded-full ${
+                  tab.id === 'recharge'
+                    ? 'bg-[#0088ff] shadow-[0_2px_8px_#0088ff]'
+                    : 'bg-[#8B3A13] shadow-[0_2px_8px_#8B3A13]'
+                }`}
+              />
             )}
 
             {tab.icon(isActive)}
@@ -109,7 +134,9 @@ const BottomNav = ({ onAuthRequired, onOpenProfile }) => {
             <span
               className={`text-[11px] mt-1 tracking-tight transition-all duration-150 ${
                 isActive
-                  ? 'text-[#8B3A13] font-bold'
+                  ? tab.id === 'recharge'
+                    ? 'text-[#0088ff] font-bold'
+                    : 'text-[#8B3A13] font-bold'
                   : 'text-[#8C7A6F] font-medium group-hover:text-[#4A382F]'
               }`}
             >
