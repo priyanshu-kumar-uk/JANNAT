@@ -7,11 +7,22 @@ const BottomNav = ({ onAuthRequired, onOpenProfile }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated } = useSelector((state) => state.auth);
-  const [activeTab, setActiveTab] = React.useState('fiewin');
+  const getActiveTab = () => {
+    if (location.pathname.startsWith('/invite')) return 'invite';
+    if (location.pathname.startsWith('/recharge')) return 'recharge';
+    if (location.pathname.startsWith('/account')) return 'account';
+    return 'fiewin';
+  };
+  const activeTab = getActiveTab();
 
   const handleTabClick = (tabId) => {
     if (tabId === 'fiewin') {
       navigate('/');
+      return;
+    }
+
+    if (tabId === 'invite') {
+      navigate('/invite');
       return;
     }
 

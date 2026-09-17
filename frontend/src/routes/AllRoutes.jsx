@@ -8,6 +8,7 @@ import Register from '../pages/auth/Register';
 import Dashboard from '../pages/user/Dashboard';
 import PublicRoute from './PublicRoute';
 import Recharge from '../pages/recharge/Recharge';
+import Invite from '../pages/invite/Invite';
 
 export const routes = createBrowserRouter([
   // Public/Guest-only routes (redirects to '/' if already logged in)
@@ -37,8 +38,16 @@ export const routes = createBrowserRouter([
         element: <Parity />,
       },
       {
+        path: "/invite",
+        element: <Invite />
+      },
+      {
         path: "/recharge",
         element: <Recharge />
+      },
+      {
+        path: "/account",
+        element: <Dashboard />
       }
     ],
   },
