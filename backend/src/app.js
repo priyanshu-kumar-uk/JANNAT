@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.routes.js';
+import gameRoutes from './routes/game.routes.js';
+import walletRoutes from './routes/wallet.routes.js';
 
 const app = express();
 
@@ -40,6 +42,8 @@ app.get('/api/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/game', gameRoutes);
+app.use('/api/wallet', walletRoutes);
 
 // 404 Handler for undefined routes
 app.use((req, res, next) => {

@@ -102,6 +102,12 @@ const authSlice = createSlice({
         };
       }
     },
+    setWalletBalance: (state, action) => {
+      const balance = Number(action.payload);
+      if (state.user) {
+        state.user.walletBalance = isNaN(balance) ? 0 : balance;
+      }
+    },
     resetAuth: (state) => {
       state.user = null;
       state.token = null;
@@ -188,5 +194,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearAuthError, resetAuth, updateWalletBalance } = authSlice.actions;
+export const { clearAuthError, resetAuth, updateWalletBalance, setWalletBalance } = authSlice.actions;
 export default authSlice.reducer;

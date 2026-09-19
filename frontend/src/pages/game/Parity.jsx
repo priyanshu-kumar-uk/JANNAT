@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ResultPopup from '../../components/games/ResultPopup';
+import useParity from '../../hooks/useParity';
 
 // Color definitions based on parity rules
 const getResultType = (num) => {
@@ -11,183 +12,149 @@ const getResultType = (num) => {
   return { type: 'unknown', colors: ['#43485c'], label: 'Pending' };
 };
 
-const initialHistory = [
-  { period: 851, number: 8 },
-  { period: 852, number: 8 },
-  { period: 853, number: 5 },
-  { period: 854, number: 8 },
-  { period: 855, number: 7 },
-  { period: 856, number: 9 },
-  { period: 857, number: 2 },
-  { period: 858, number: 6 },
-  { period: 859, number: 9 },
-  { period: 860, number: 0 },
-  { period: 861, number: 9 },
-  { period: 862, number: 6 },
-  { period: 863, number: 7 },
-  { period: 864, number: 9 },
-  { period: 865, number: 3 },
-  { period: 866, number: 9 },
-  { period: 867, number: 3 },
-  { period: 868, number: 2 },
-  { period: 869, number: 2 },
-  { period: 870, number: 5 },
-  { period: 871, number: 6 },
-  { period: 872, number: 3 },
-];
-
 const Parity = () => {
   const navigate = useNavigate();
+  const prevPeriodRef = useRef(null);
 
-  // Active game state
-  const [period, setPeriod] = useState(2108231873);
-  const [countdown, setCountdown] = useState(21); // Set to 21 initially to match screenshot "00:21"
-  const [history, setHistory] = useState(initialHistory);
-  const [activeTab, setActiveTab] = useState('record'); // 'continuous' | 'record' | 'probability'
+  const {
+    user,
+    isAuthenticated,
+    period,
+    endTime,
+    countdown,
+    isLocked,
+    history,
+    activeTab,
+    myBets,
+    ordersList,
+    ordersPage,
+    totalOrdersPages,
+    totalOrdersCount,
+    ordersFilter,
+    isLoadingOrders,
+    isPlacingBet,
+    betModal,
+    contractMoney,
+    quantity,
+    agreeRule,
+    showRuleModal,
+    showMoreModal,
+    resultPopupData,
+    selectedOrderDetail,
+    copiedOrderId,
+    toastMessage,
+    handleBet,
+    handleFetchCurrentGame,
+    handleFetchHistory,
+    handleFetchMyBets,
+    handleFetchOrdersList,
+    handleCheckUnseenResults,
+    handleCloseResultPopup,
+    handleCopyOrderId,
+    handleOpenBetModal,
+    handleCloseBetModal,
+    handleSetContractMoney,
+    handleSetQuantity,
+    handleSetAgreeRule,
+    handleTabChange,
+    handleFilterChange,
+    handlePageChange,
+    handleSetShowRuleModal,
+    handleSetShowMoreModal,
+    handleSelectOrderDetail,
+    handleCountdownTick,
+  } = useParity();
 
-  // User state
-  const [balance, setBalance] = useState(1000);
-  const [myBets, setMyBets] = useState([]);
-  const [toastMessage, setToastMessage] = useState(null);
-
-  // Modals state
-  const [betModal, setBetModal] = useState(null); // { type: 'green' | 'violet' | 'red' | 'number', value?: number }
-  const [contractMoney, setContractMoney] = useState(10);
-  const [quantity, setQuantity] = useState(1);
-  const [agreeRule, setAgreeRule] = useState(true);
-  const [showRuleModal, setShowRuleModal] = useState(false);
-  const [showMoreModal, setShowMoreModal] = useState(false);
-  const [resultPopupData, setResultPopupData] = useState(null);
-
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 2200);
+  const formatOrderTime = (dateStr) => {
+    if (!dateStr) return '--';
+    const d = new Date(dateStr);
+    return d.toLocaleString('en-IN', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
   };
 
-  // 30-second live cycle
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          // Round complete! Resolve round
-          const newNumber = Math.floor(Math.random() * 10);
-          const finishedPeriodShort = Number(String(period).slice(-3));
+    if (activeTab === 'myorders' && isAuthenticated) {
+      handleFetchOrdersList(ordersPage, ordersFilter);
+    }
+  }, [activeTab, ordersPage, ordersFilter, isAuthenticated, handleFetchOrdersList]);
 
-          setHistory((old) => [...old, { period: finishedPeriodShort, number: newNumber }]);
-          setPeriod((p) => p + 1);
+  /**
+   * Initial data load on mount
+   */
+  useEffect(() => {
+    handleFetchCurrentGame();
+    handleFetchHistory();
+    if (isAuthenticated) {
+      handleFetchMyBets();
+      handleCheckUnseenResults();
+    }
+  }, [handleFetchCurrentGame, handleFetchHistory, handleFetchMyBets, handleCheckUnseenResults, isAuthenticated]);
 
-          // Evaluate user bets for this round
-          const currentRoundBets = myBets.filter((bet) => bet.period === period);
-          if (currentRoundBets.length > 0) {
-            let totalWinnings = 0;
-            let totalBetPoint = 0;
-            let selectedLabels = [];
+  /**
+   * Smooth 1-second countdown ticker synchronized with backend endTime
+   */
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!endTime) return;
 
-            currentRoundBets.forEach((bet) => {
-              totalBetPoint += bet.amount;
-              selectedLabels.push(bet.type === 'number' ? bet.value : bet.type.toUpperCase());
-              let won = false;
-              let multiplier = 0;
+      const remainingMs = new Date(endTime).getTime() - Date.now();
+      const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
 
-              if (bet.type === 'green' && [1, 3, 7, 9].includes(newNumber)) {
-                won = true;
-                multiplier = 2;
-              } else if (bet.type === 'green' && newNumber === 5) {
-                won = true;
-                multiplier = 1.5;
-              } else if (bet.type === 'red' && [2, 4, 6, 8].includes(newNumber)) {
-                won = true;
-                multiplier = 2;
-              } else if (bet.type === 'red' && newNumber === 0) {
-                won = true;
-                multiplier = 1.5;
-              } else if (bet.type === 'violet' && [0, 5].includes(newNumber)) {
-                won = true;
-                multiplier = 4.5;
-              } else if (bet.type === 'number' && bet.value === newNumber) {
-                won = true;
-                multiplier = 9;
-              }
+      handleCountdownTick(remainingSec);
 
-              if (won) {
-                const winAmt = Math.floor(bet.amount * multiplier * 0.98);
-                totalWinnings += winAmt;
-              }
-            });
-
-            const isWin = totalWinnings > 0;
-            if (isWin) {
-              setBalance((b) => b + totalWinnings);
-            }
-
-            setResultPopupData({
-              isOpen: true,
-              isWin,
-              resultNumber: newNumber,
-              period: period,
-              price: `$${40000 + Math.floor(Math.random() * 8000)}`,
-              select: selectedLabels.join(', '),
-              point: totalBetPoint,
-              amount: isWin ? totalWinnings : -totalBetPoint,
-            });
+      // When countdown expires (round finishes)
+      if (remainingSec === 0) {
+        // Wait 1.2s for backend settlement, then re-fetch
+        setTimeout(() => {
+          handleFetchCurrentGame();
+          handleFetchHistory();
+          if (isAuthenticated) {
+            handleFetchMyBets();
+            handleCheckUnseenResults();
+            handleFetchOrdersList(ordersPage, ordersFilter);
           }
-
-          return 30; // Reset to 30s
-        }
-        return prev - 1;
-      });
+        }, 1200);
+      }
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, [period, myBets]);
+    return () => clearInterval(interval);
+  }, [endTime, handleCountdownTick, handleFetchCurrentGame, handleFetchHistory, handleFetchMyBets, handleCheckUnseenResults, handleFetchOrdersList, isAuthenticated, ordersPage, ordersFilter]);
 
-  const isLocked = countdown <= 5;
+  /**
+   * Background sync heartbeat every 6 seconds to avoid time drift
+   */
+  useEffect(() => {
+    const heartbeat = setInterval(() => {
+      handleFetchCurrentGame();
+    }, 6000);
+    return () => clearInterval(heartbeat);
+  }, [handleFetchCurrentGame]);
 
-  // Format countdown into digits: MM:SS -> e.g. "00" and "21"
+  /**
+   * Detect period change to refresh user bets and history
+   */
+  useEffect(() => {
+    if (period && prevPeriodRef.current && period !== prevPeriodRef.current) {
+      handleFetchHistory();
+      if (isAuthenticated) {
+        handleFetchMyBets();
+        handleCheckUnseenResults();
+        handleFetchOrdersList(ordersPage, ordersFilter);
+      }
+    }
+    prevPeriodRef.current = period;
+  }, [period, handleFetchHistory, handleFetchMyBets, handleCheckUnseenResults, handleFetchOrdersList, isAuthenticated, ordersPage, ordersFilter]);
+
+  // Format countdown into digits: MM:SS
   const minutes = String(Math.floor(countdown / 60)).padStart(2, '0');
   const seconds = String(countdown % 60).padStart(2, '0');
 
-  const openBetModal = (type, value = null) => {
-    if (isLocked) {
-      showToast('Betting locked for this round!');
-      return;
-    }
-    setContractMoney(10);
-    setQuantity(1);
-    setAgreeRule(true);
-    setBetModal({ type, value });
-  };
-
-  const handleConfirmBet = () => {
-    if (!agreeRule) {
-      showToast('Please agree to PRESALE RULE');
-      return;
-    }
-    const totalAmount = contractMoney * quantity;
-    if (balance < totalAmount) {
-      showToast('Insufficient balance!');
-      return;
-    }
-
-    setBalance((b) => b - totalAmount);
-    setMyBets((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        period,
-        type: betModal.type,
-        value: betModal.value,
-        amount: totalAmount,
-      },
-    ]);
-
-    showToast(`Order Placed for ₹${totalAmount}!`);
-    setBetModal(null);
-  };
-
-  // Compute probability statistics
+  // Compute probability statistics from live history
   const probStats = useMemo(() => {
     let redCount = 0;
     let greenCount = 0;
@@ -195,15 +162,18 @@ const Parity = () => {
     const numCounts = Array(10).fill(0);
 
     history.forEach((h) => {
-      numCounts[h.number]++;
-      if ([1, 3, 7, 9].includes(h.number)) greenCount++;
-      else if ([2, 4, 6, 8].includes(h.number)) redCount++;
-      else if (h.number === 0) {
-        redCount += 0.5;
-        violetCount += 0.5;
-      } else if (h.number === 5) {
-        greenCount += 0.5;
-        violetCount += 0.5;
+      const num = h.resultNumber !== undefined ? h.resultNumber : h.number;
+      if (num !== null && num !== undefined && num >= 0 && num <= 9) {
+        numCounts[num]++;
+        if ([1, 3, 7, 9].includes(num)) greenCount++;
+        else if ([2, 4, 6, 8].includes(num)) redCount++;
+        else if (num === 0) {
+          redCount += 0.5;
+          violetCount += 0.5;
+        } else if (num === 5) {
+          greenCount += 0.5;
+          violetCount += 0.5;
+        }
       }
     });
 
@@ -217,6 +187,85 @@ const Parity = () => {
     };
   }, [history]);
 
+  // Compute streak analytics from live history
+  const streakStats = useMemo(() => {
+    let currentGreenStreak = 0;
+    let currentRedStreak = 0;
+    let violetOccurrences = 0;
+
+    // History is chronological (oldest to newest), traverse from newest backwards
+    for (let i = history.length - 1; i >= 0; i--) {
+      const num = history[i].resultNumber !== undefined ? history[i].resultNumber : history[i].number;
+      if (num === 0 || num === 5) violetOccurrences++;
+
+      if ([1, 3, 7, 9, 5].includes(num)) {
+        if (currentRedStreak === 0) currentGreenStreak++;
+      }
+      if ([2, 4, 6, 8, 0].includes(num)) {
+        if (currentGreenStreak === 0) currentRedStreak++;
+      }
+    }
+
+    return {
+      greenStreak: currentGreenStreak || 1,
+      redStreak: currentRedStreak || 1,
+      violetCount: violetOccurrences,
+    };
+  }, [history]);
+
+  // Render badge helper for user choice (Green, Red, Violet, or 0-9)
+  const renderChoiceBadge = (choice, betType) => {
+    const ch = String(choice || '').toLowerCase();
+    if (betType === 'number' || (!isNaN(ch) && ch !== '')) {
+      const num = Number(ch);
+      const res = getResultType(num);
+      return (
+        <span
+          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold text-white shadow-2xs"
+          style={{
+            background:
+              res.colors.length > 1
+                ? `linear-gradient(90deg, ${res.colors[0]} 50%, ${res.colors[1]} 50%)`
+                : res.colors[0],
+          }}
+        >
+          <span>Number {num}</span>
+        </span>
+      );
+    }
+
+    if (ch === 'green') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#00c07f]/10 text-[#00a86b] border border-[#00c07f]/30">
+          <span className="w-2 h-2 rounded-full bg-[#00c07f]" />
+          <span>Green</span>
+        </span>
+      );
+    }
+    if (ch === 'red') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#fa3c1e]/10 text-[#fa3c1e] border border-[#fa3c1e]/30">
+          <span className="w-2 h-2 rounded-full bg-[#fa3c1e]" />
+          <span>Red</span>
+        </span>
+      );
+    }
+    if (ch === 'violet') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#6855f4]/10 text-[#6855f4] border border-[#6855f4]/30">
+          <span className="w-2 h-2 rounded-full bg-[#6855f4]" />
+          <span>Violet</span>
+        </span>
+      );
+    }
+
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
+        {choice}
+      </span>
+    );
+  };
+
   // Render badge helper for the record matrix
   const renderBadge = (item, isPending = false) => {
     if (isPending) {
@@ -227,7 +276,7 @@ const Parity = () => {
       );
     }
 
-    const { number } = item;
+    const number = item.resultNumber !== undefined ? item.resultNumber : item.number;
     if (number === 5) {
       return (
         <div
@@ -291,14 +340,30 @@ const Parity = () => {
           <span className="text-xl">🚀</span>
         </div>
 
-        {/* Rule Button */}
-        <button
-          onClick={() => setShowRuleModal(true)}
-          className="flex items-center gap-1 text-gray-500 hover:text-gray-700 active:scale-95 transition-transform cursor-pointer"
-        >
-          <span className="w-4 h-4 rounded-full border border-gray-400 flex items-center justify-center text-[10px] font-bold">?</span>
-          <span className="text-[13px] font-medium">Rule</span>
-        </button>
+        {/* User Balance Capsule & Rule Button */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-[#f0f3fc] border border-[#dbe3f8] px-2 py-0.5 rounded-full">
+            <span className="text-[10px] font-medium text-gray-500">₹</span>
+            <span className="text-xs font-black text-gray-900">
+              {user ? Number(user.walletBalance || 0).toLocaleString('en-IN') : '0'}
+            </span>
+            <button
+              onClick={() => navigate('/recharge')}
+              className="ml-0.5 w-3.5 h-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center text-[10px] font-black cursor-pointer active:scale-90"
+              title="Recharge Balance"
+            >
+              +
+            </button>
+          </div>
+
+          <button
+            onClick={() => handleSetShowRuleModal(true)}
+            className="flex items-center gap-1 text-gray-500 hover:text-gray-700 active:scale-95 transition-transform cursor-pointer"
+          >
+            <span className="w-4 h-4 rounded-full border border-gray-400 flex items-center justify-center text-[10px] font-bold">?</span>
+            <span className="text-[13px] font-medium">Rule</span>
+          </button>
+        </div>
       </div>
 
       {/* 2. Period & Count Down Section */}
@@ -307,7 +372,7 @@ const Parity = () => {
         <div className="flex flex-col">
           <span className="text-gray-400 text-xs font-normal">Period</span>
           <span className="text-[20px] font-bold text-gray-900 tracking-tight mt-0.5 leading-tight">
-            {period}
+            {period || '...'}
           </span>
         </div>
 
@@ -350,7 +415,7 @@ const Parity = () => {
         {/* Button 1: Join Green */}
         <div className="flex flex-col items-center">
           <button
-            onClick={() => openBetModal('green')}
+            onClick={() => handleOpenBetModal('green')}
             disabled={isLocked}
             className={`w-full py-2.5 px-1 rounded-xl bg-[#00c07f] text-white flex flex-col items-center justify-center shadow-sm active:scale-95 transition-all cursor-pointer ${
               isLocked ? 'opacity-60 cursor-not-allowed' : 'hover:brightness-105'
@@ -371,7 +436,7 @@ const Parity = () => {
         {/* Button 2: Join Violet */}
         <div className="flex flex-col items-center">
           <button
-            onClick={() => openBetModal('violet')}
+            onClick={() => handleOpenBetModal('violet')}
             disabled={isLocked}
             className={`w-full py-2.5 px-1 rounded-xl bg-[#6855f4] text-white flex flex-col items-center justify-center shadow-sm active:scale-95 transition-all cursor-pointer ${
               isLocked ? 'opacity-60 cursor-not-allowed' : 'hover:brightness-105'
@@ -392,7 +457,7 @@ const Parity = () => {
         {/* Button 3: Join Red */}
         <div className="flex flex-col items-center">
           <button
-            onClick={() => openBetModal('red')}
+            onClick={() => handleOpenBetModal('red')}
             disabled={isLocked}
             className={`w-full py-2.5 px-1 rounded-xl bg-[#fa3c1e] text-white flex flex-col items-center justify-center shadow-sm active:scale-95 transition-all cursor-pointer ${
               isLocked ? 'opacity-60 cursor-not-allowed' : 'hover:brightness-105'
@@ -417,7 +482,7 @@ const Parity = () => {
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((num) => (
             <button
               key={num}
-              onClick={() => openBetModal('number', num)}
+              onClick={() => handleOpenBetModal('number', num)}
               disabled={isLocked}
               className={`h-11 rounded-lg bg-white border border-[#e2e8f0] shadow-xs flex items-center justify-center relative overflow-hidden transition-all active:scale-95 ${
                 isLocked ? 'opacity-60 cursor-not-allowed' : 'hover:border-blue-400 hover:shadow-sm cursor-pointer'
@@ -443,20 +508,22 @@ const Parity = () => {
       {/* 5. Tabs (Continuous, Record, Probability) */}
       <div className="w-full mt-4 bg-white border-t border-gray-100 shadow-xs">
         <div className="flex items-center justify-around border-b border-gray-200/80">
-          <button
-            onClick={() => setActiveTab('continuous')}
+
+   <button
+            onClick={() => handleTabChange('probability')}
             className={`flex-1 py-3 text-center text-[15px] cursor-pointer transition-colors relative ${
-              activeTab === 'continuous' ? 'text-gray-900 font-bold' : 'text-gray-400 font-medium hover:text-gray-600'
+              activeTab === 'probability' ? 'text-gray-900 font-bold' : 'text-gray-400 font-medium hover:text-gray-600'
             }`}
           >
-            Continuous
-            {activeTab === 'continuous' && (
+            Probability
+            {activeTab === 'probability' && (
               <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-[2.5px] bg-[#2196f3] rounded-t-full" />
             )}
           </button>
 
+
           <button
-            onClick={() => setActiveTab('record')}
+            onClick={() => handleTabChange('record')}
             className={`flex-1 py-3 text-center text-[15px] cursor-pointer transition-colors relative ${
               activeTab === 'record' ? 'text-gray-900 font-bold' : 'text-gray-400 font-medium hover:text-gray-600'
             }`}
@@ -467,28 +534,32 @@ const Parity = () => {
             )}
           </button>
 
+
           <button
-            onClick={() => setActiveTab('probability')}
+            onClick={() => handleTabChange('myorders')}
             className={`flex-1 py-3 text-center text-[15px] cursor-pointer transition-colors relative ${
-              activeTab === 'probability' ? 'text-gray-900 font-bold' : 'text-gray-400 font-medium hover:text-gray-600'
+              activeTab === 'myorders' ? 'text-gray-900 font-bold' : 'text-gray-400 font-medium hover:text-gray-600'
             }`}
           >
-            Probability
-            {activeTab === 'probability' && (
+
+            My Orders
+            {activeTab === 'myorders' && (
               <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-[2.5px] bg-[#2196f3] rounded-t-full" />
             )}
           </button>
+
+       
         </div>
       </div>
 
-      {/* TAB 1: FastParity Record (Exact match with screenshot) */}
+      {/* TAB 1: FastParity Record */}
       {activeTab === 'record' && (
         <div className="w-full px-4 pt-3.5 flex flex-col">
           {/* Header with Title & "more >" */}
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-[15px] font-bold text-gray-800 tracking-tight">FastParity Record</h2>
             <button
-              onClick={() => setShowMoreModal(true)}
+              onClick={() => handleSetShowMoreModal(true)}
               className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-0.5 cursor-pointer"
             >
               more &gt;
@@ -497,28 +568,30 @@ const Parity = () => {
 
           {/* 10-Column History Matrix */}
           <div className="grid grid-cols-10 gap-y-3.5 gap-x-1 items-start justify-items-center">
-            {/* Render items in chronological chunks of 10 */}
+            {/* Render items from MongoDB history */}
             {history.map((item) => (
-              <div key={item.period} className="flex flex-col items-center">
+              <div key={item._id || item.period} className="flex flex-col items-center">
                 <span className="text-[11px] font-normal text-gray-700 mb-1 leading-none">
-                  {item.period}
+                  {String(item.period).slice(-3)}
                 </span>
                 {renderBadge(item)}
               </div>
             ))}
 
             {/* Current Active Round (Pending '?') */}
-            <div className="flex flex-col items-center">
-              <span className="text-[11px] font-normal text-gray-700 mb-1 leading-none">
-                {String(period).slice(-3)}
-              </span>
-              {renderBadge(null, true)}
-            </div>
+            {period && (
+              <div className="flex flex-col items-center">
+                <span className="text-[11px] font-normal text-gray-700 mb-1 leading-none">
+                  {String(period).slice(-3)}
+                </span>
+                {renderBadge(null, true)}
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* TAB 2: Continuous (Streak tracker) */}
+      {/* TAB 2: Continuous (Real Streak Tracker) */}
       {activeTab === 'continuous' && (
         <div className="w-full px-4 pt-3.5 flex flex-col">
           <div className="flex items-center justify-between mb-3">
@@ -532,7 +605,9 @@ const Parity = () => {
                 <div className="w-4 h-4 rounded-full bg-[#00c07f]" />
                 <span className="text-xs font-bold text-emerald-900">Green Streak</span>
               </div>
-              <span className="text-xs font-black text-emerald-700">Recent: 7 consecutive</span>
+              <span className="text-xs font-black text-emerald-700">
+                Recent: {streakStats.greenStreak} consecutive
+              </span>
             </div>
 
             {/* Red Summary */}
@@ -541,7 +616,9 @@ const Parity = () => {
                 <div className="w-4 h-4 rounded-full bg-[#fa3c1e]" />
                 <span className="text-xs font-bold text-rose-900">Red Streak</span>
               </div>
-              <span className="text-xs font-black text-rose-700">Recent: 2 consecutive</span>
+              <span className="text-xs font-black text-rose-700">
+                Recent: {streakStats.redStreak} consecutive
+              </span>
             </div>
 
             {/* Violet Summary */}
@@ -550,17 +627,19 @@ const Parity = () => {
                 <div className="w-4 h-4 rounded-full bg-[#6855f4]" />
                 <span className="text-xs font-bold text-purple-900">Violet Occurrence</span>
               </div>
-              <span className="text-xs font-black text-purple-700">Frequent on 0 & 5</span>
+              <span className="text-xs font-black text-purple-700">
+                {streakStats.violetCount} times in last {history.length} rounds
+              </span>
             </div>
           </div>
         </div>
       )}
 
-      {/* TAB 3: Probability */}
+      {/* TAB 3: Probability (Live Outcome Probability) */}
       {activeTab === 'probability' && (
         <div className="w-full px-4 pt-3.5 flex flex-col">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-[15px] font-bold text-gray-800 tracking-tight">Outcome Probability</h2>
+            <h2 className="text-[15px] font-bold text-gray-800 tracking-tight">Outcome Probability ({probStats.total} rounds)</h2>
           </div>
 
           {/* Color percentage bars */}
@@ -571,7 +650,7 @@ const Parity = () => {
                 <span>{probStats.greenPct}%</span>
               </div>
               <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-[#00c07f] rounded-full" style={{ width: `${probStats.greenPct}%` }} />
+                <div className="h-full bg-[#00c07f] rounded-full transition-all duration-500" style={{ width: `${probStats.greenPct}%` }} />
               </div>
             </div>
 
@@ -581,7 +660,7 @@ const Parity = () => {
                 <span>{probStats.redPct}%</span>
               </div>
               <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-[#fa3c1e] rounded-full" style={{ width: `${probStats.redPct}%` }} />
+                <div className="h-full bg-[#fa3c1e] rounded-full transition-all duration-500" style={{ width: `${probStats.redPct}%` }} />
               </div>
             </div>
 
@@ -591,7 +670,7 @@ const Parity = () => {
                 <span>{probStats.violetPct}%</span>
               </div>
               <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-[#6855f4] rounded-full" style={{ width: `${probStats.violetPct}%` }} />
+                <div className="h-full bg-[#6855f4] rounded-full transition-all duration-500" style={{ width: `${probStats.violetPct}%` }} />
               </div>
             </div>
           </div>
@@ -617,8 +696,217 @@ const Parity = () => {
         </div>
       )}
 
+      {/* TAB 4: My Orders */}
+      {activeTab === 'myorders' && (
+        <div className="w-full pt-3.5 flex flex-col">
+          {/* Header with Title & Refresh */}
+          <div className="flex items-center justify-between mb-3 px-4">
+            <div className="flex items-center gap-2">
+              <h2 className="text-[15px] font-bold text-gray-800 tracking-tight">Order History</h2>
+              {isAuthenticated && totalOrdersCount > 0 && (
+                <span className="text-[11px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                  {totalOrdersCount} Total
+                </span>
+              )}
+            </div>
+            {isAuthenticated && (
+              <button
+                onClick={() => handleFetchOrdersList(ordersPage, ordersFilter)}
+                disabled={isLoadingOrders}
+                className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1 font-semibold cursor-pointer transition-transform active:scale-95 disabled:opacity-50"
+                title="Refresh Orders"
+              >
+                <svg
+                  className={`w-3.5 h-3.5 ${isLoadingOrders ? 'animate-spin' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2.5"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                <span>Refresh</span>
+              </button>
+            )}
+          </div>
+
+          {/* Filter Pills */}
+          <div className="px-4 mb-3">
+            <div className="flex bg-gray-100/90 p-1 rounded-xl gap-1">
+              {[
+                { id: 'all', label: 'All' },
+                { id: 'pending', label: 'Waiting' },
+                { id: 'win', label: 'Won' },
+                { id: 'lose', label: 'Lost' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => handleFilterChange(tab.id)}
+                  className={`flex-1 py-1.5 text-xs rounded-lg font-bold transition-all cursor-pointer ${
+                    ordersFilter === tab.id
+                      ? 'bg-white text-blue-600 shadow-xs'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Unauthenticated Prompt */}
+          {!isAuthenticated ? (
+            <div className="px-4 py-8 flex flex-col items-center justify-center text-center">
+              <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-3 text-blue-600 shadow-inner">
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h3 className="text-sm font-bold text-gray-800 mb-1">Sign in to View Orders</h3>
+              <p className="text-xs text-gray-400 max-w-[260px] mb-4">
+                Track your live orders, bet history, and winning payouts in real time.
+              </p>
+              <button
+                onClick={() => navigate('/login')}
+                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold rounded-xl shadow-md active:scale-95 transition-all cursor-pointer"
+              >
+                Log In Now
+              </button>
+            </div>
+          ) : isLoadingOrders ? (
+            /* Loading State */
+            <div className="px-4 py-10 flex flex-col items-center justify-center gap-2 text-gray-400">
+              <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              <span className="text-xs font-medium">Loading your orders...</span>
+            </div>
+          ) : ordersList.length === 0 ? (
+            /* Empty State */
+            <div className="px-4 py-10 flex flex-col items-center justify-center text-center">
+              <div className="w-14 h-14 bg-gray-50 border border-gray-100 rounded-2xl flex items-center justify-center mb-3 text-gray-300">
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+              </div>
+              <h3 className="text-sm font-bold text-gray-700 mb-1">No Orders Found</h3>
+              <p className="text-xs text-gray-400 max-w-[260px]">
+                {ordersFilter === 'all'
+                  ? 'You have not placed any bets yet. Choose Green, Red, Violet, or a number above to start!'
+                  : `No orders found with status "${ordersFilter}".`}
+              </p>
+            </div>
+          ) : (
+            /* Orders List */
+            <>
+              <div className="px-4 space-y-2.5">
+                {ordersList.map((order) => {
+                  const isPending = order.result === 'PENDING';
+                  const isWin = order.result === 'WIN';
+                  const isLose = order.result === 'LOSE';
+
+                  return (
+                    <div
+                      key={order._id || order.id}
+                      onClick={() => handleSelectOrderDetail(order)}
+                      className="bg-white border border-gray-200/80 hover:border-blue-300 rounded-xl p-3.5 shadow-2xs hover:shadow-xs transition-all cursor-pointer active:scale-[0.99] relative overflow-hidden group"
+                    >
+                      {/* Top Row: Period & Status */}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[12px] font-extrabold text-gray-800 tracking-tight">
+                            Period {order.period}
+                          </span>
+                          <span className="text-[10px] text-gray-400 font-mono">
+                            #{String(order._id).slice(-4)}
+                          </span>
+                        </div>
+
+                        {/* Status Badge */}
+                        {isPending && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                            Waiting
+                          </span>
+                        )}
+                        {isWin && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <svg className="w-3 h-3 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            +₹{Number(order.winAmount || 0).toFixed(2)}
+                          </span>
+                        )}
+                        {isLose && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-gray-100 text-gray-500 border border-gray-200">
+                            -₹{Number(order.amount || 0).toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Middle Row: Selection Chip, Bet Details */}
+                      <div className="flex items-center justify-between py-1.5 border-t border-b border-gray-100 my-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] text-gray-400 font-medium">Select:</span>
+                          {renderChoiceBadge(order.choice, order.betType)}
+                        </div>
+
+                        <div className="flex items-center gap-2 text-right">
+                          <div className="flex flex-col items-end">
+                            <span className="text-[10px] text-gray-400 leading-none mb-0.5">Contract</span>
+                            <span className="text-xs font-bold text-gray-800 leading-none">
+                              ₹{order.amount}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Bottom Row: Date & Detail Trigger */}
+                      <div className="flex items-center justify-between text-[11px] text-gray-400 pt-0.5">
+                        <span>{formatOrderTime(order.createdAt)}</span>
+                        <div className="flex items-center gap-1 text-blue-600 group-hover:text-blue-700 font-bold">
+                          <span>Detail</span>
+                          <svg className="w-3 h-3 transform group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Pagination Controls */}
+              {totalOrdersPages > 1 && (
+                <div className="flex items-center justify-between px-4 pt-3 pb-1 border-t border-gray-100 mt-3">
+                  <button
+                    onClick={() => handlePageChange(ordersPage - 1)}
+                    disabled={ordersPage <= 1 || isLoadingOrders}
+                    className="px-3 py-1.5 text-xs font-bold rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all active:scale-95"
+                  >
+                    &lt; Prev
+                  </button>
+                  <span className="text-xs font-semibold text-gray-500">
+                    Page {ordersPage} of {totalOrdersPages}
+                  </span>
+                  <button
+                    onClick={() => handlePageChange(ordersPage + 1)}
+                    disabled={ordersPage >= totalOrdersPages || isLoadingOrders}
+                    className="px-3 py-1.5 text-xs font-bold rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all active:scale-95"
+                  >
+                    Next &gt;
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
       {/* 6. Active Bets List for current round */}
-      {myBets.filter((b) => b.period === period).length > 0 && (
+      {period && myBets.filter((b) => b.period === period).length > 0 && (
         <div className="w-full px-4 mt-5">
           <div className="p-3 bg-blue-50/70 border border-blue-200/70 rounded-xl">
             <span className="text-xs font-bold text-blue-900">Your Current Bets (Period {period}):</span>
@@ -627,10 +915,10 @@ const Parity = () => {
                 .filter((b) => b.period === period)
                 .map((b) => (
                   <span
-                    key={b.id}
+                    key={b._id || b.id}
                     className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-white border border-blue-300 text-blue-800 shadow-2xs"
                   >
-                    {b.type === 'number' ? `Number ${b.value}` : b.type.toUpperCase()}: ₹{b.amount}
+                    {b.betType === 'number' ? `Number ${b.choice}` : b.choice.toUpperCase()}: ₹{b.amount}
                   </span>
                 ))}
             </div>
@@ -664,6 +952,14 @@ const Parity = () => {
               </span>
             </div>
 
+            {/* Available Balance Indicator */}
+            <div className="flex items-center justify-between text-xs text-gray-500 mb-2 px-1">
+              <span>Available Wallet Balance:</span>
+              <span className="font-extrabold text-blue-600">
+                ₹{user ? Number(user.walletBalance || 0).toLocaleString('en-IN') : 0}
+              </span>
+            </div>
+
             {/* Contract Money Buttons */}
             <div className="flex flex-col mb-3">
               <span className="text-xs font-semibold text-gray-600 mb-1.5">Contract Money</span>
@@ -671,7 +967,7 @@ const Parity = () => {
                 {[10, 100, 1000, 10000].map((amt) => (
                   <button
                     key={amt}
-                    onClick={() => setContractMoney(amt)}
+                    onClick={() => handleSetContractMoney(amt)}
                     className={`py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       contractMoney === amt
                         ? 'bg-blue-600 text-white shadow-xs'
@@ -686,12 +982,12 @@ const Parity = () => {
 
             {/* Number Multiplier Stepper */}
             <div className="flex flex-col mb-3">
-              <span className="text-xs font-semibold text-gray-600 mb-1.5">Number</span>
+              <span className="text-xs font-semibold text-gray-600 mb-1.5">Number (Multiplier)</span>
               <div className="flex items-center justify-between">
                 {/* Stepper */}
                 <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
                   <button
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                    onClick={() => handleSetQuantity((q) => Math.max(1, q - 1))}
                     className="w-9 h-8 bg-gray-50 hover:bg-gray-100 flex items-center justify-center font-black text-gray-600 active:bg-gray-200"
                   >
                     -
@@ -700,7 +996,7 @@ const Parity = () => {
                     {quantity}
                   </span>
                   <button
-                    onClick={() => setQuantity((q) => q + 1)}
+                    onClick={() => handleSetQuantity((q) => q + 1)}
                     className="w-9 h-8 bg-gray-50 hover:bg-gray-100 flex items-center justify-center font-black text-gray-600 active:bg-gray-200"
                   >
                     +
@@ -712,7 +1008,7 @@ const Parity = () => {
                   {[1, 5, 10].map((q) => (
                     <button
                       key={q}
-                      onClick={() => setQuantity(q)}
+                      onClick={() => handleSetQuantity(q)}
                       className={`px-2.5 py-1 text-xs font-bold rounded border cursor-pointer ${
                         quantity === q
                           ? 'border-blue-600 text-blue-600 bg-blue-50'
@@ -728,7 +1024,7 @@ const Parity = () => {
 
             {/* Total Contract Money */}
             <div className="py-2.5 px-3 bg-gray-50 rounded-xl mb-3 flex items-center justify-between text-xs">
-              <span className="text-gray-500">Total Contract Money:</span>
+              <span className="text-gray-500">Total Bet Amount:</span>
               <span className="font-extrabold text-base text-gray-900">₹{contractMoney * quantity}</span>
             </div>
 
@@ -737,7 +1033,7 @@ const Parity = () => {
               <input
                 type="checkbox"
                 checked={agreeRule}
-                onChange={(e) => setAgreeRule(e.target.checked)}
+                onChange={(e) => handleSetAgreeRule(e.target.checked)}
                 className="w-4 h-4 text-blue-600 rounded accent-blue-600"
               />
               <span>I agree to <span className="text-blue-600 underline">PRESALE RULE</span></span>
@@ -746,16 +1042,18 @@ const Parity = () => {
             {/* Modal Actions */}
             <div className="grid grid-cols-2 gap-2.5">
               <button
-                onClick={() => setBetModal(null)}
+                onClick={handleCloseBetModal}
+                disabled={isPlacingBet}
                 className="py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl cursor-pointer active:scale-95 transition-transform"
               >
                 Cancel
               </button>
               <button
-                onClick={handleConfirmBet}
-                className="py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs rounded-xl shadow-md active:scale-95 transition-transform cursor-pointer"
+                onClick={handleBet}
+                disabled={isPlacingBet}
+                className="py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs rounded-xl shadow-md active:scale-95 transition-transform cursor-pointer disabled:opacity-50"
               >
-                Confirm
+                {isPlacingBet ? 'Placing Bet...' : 'Confirm'}
               </button>
             </div>
           </div>
@@ -769,7 +1067,7 @@ const Parity = () => {
             <div className="flex items-center justify-between border-b border-gray-100 pb-2.5 mb-3">
               <h3 className="font-bold text-base text-gray-900">Fast-Parity Rule</h3>
               <button
-                onClick={() => setShowRuleModal(false)}
+                onClick={() => handleSetShowRuleModal(false)}
                 className="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-sm cursor-pointer"
               >
                 ✕
@@ -795,7 +1093,7 @@ const Parity = () => {
             </div>
 
             <button
-              onClick={() => setShowRuleModal(false)}
+              onClick={() => handleSetShowRuleModal(false)}
               className="mt-5 w-full py-2.5 bg-blue-600 text-white font-bold text-xs rounded-xl shadow cursor-pointer active:scale-95"
             >
               I Understand
@@ -811,7 +1109,7 @@ const Parity = () => {
             <div className="flex items-center justify-between border-b border-gray-100 pb-2.5 mb-2">
               <h3 className="font-bold text-base text-gray-900">FastParity Record History</h3>
               <button
-                onClick={() => setShowMoreModal(false)}
+                onClick={() => handleSetShowMoreModal(false)}
                 className="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-sm cursor-pointer"
               >
                 ✕
@@ -833,12 +1131,13 @@ const Parity = () => {
                     .slice()
                     .reverse()
                     .map((row) => {
-                      const res = getResultType(row.number);
+                      const number = row.resultNumber !== undefined ? row.resultNumber : row.number;
+                      const res = getResultType(number);
                       return (
-                        <tr key={row.period} className="hover:bg-gray-50">
+                        <tr key={row._id || row.period} className="hover:bg-gray-50">
                           <td className="py-2 text-gray-700 font-medium">{row.period}</td>
-                          <td className="py-2 text-gray-500">{41200 + row.number * 3}</td>
-                          <td className="py-2 font-bold text-gray-800">{row.number}</td>
+                          <td className="py-2 text-gray-500">{row.price || (41200 + (number || 0) * 3)}</td>
+                          <td className="py-2 font-bold text-gray-800">{number}</td>
                           <td className="py-2 text-right">
                             <span
                               className="inline-block w-4 h-4 rounded-full"
@@ -858,7 +1157,7 @@ const Parity = () => {
             </div>
 
             <button
-              onClick={() => setShowMoreModal(false)}
+              onClick={() => handleSetShowMoreModal(false)}
               className="mt-3 w-full py-2 bg-gray-100 text-gray-700 font-bold text-xs rounded-xl cursor-pointer"
             >
               Close
@@ -867,11 +1166,11 @@ const Parity = () => {
         </div>
       )}
 
-      {/* MODAL 4: Result Popup */}
+      {/* MODAL 4: Result Popup for Settled User Bets */}
       {resultPopupData && (
         <ResultPopup
           isOpen={Boolean(resultPopupData)}
-          onClose={() => setResultPopupData(null)}
+          onClose={handleCloseResultPopup}
           isWin={resultPopupData.isWin}
           resultNumber={resultPopupData.resultNumber}
           period={resultPopupData.period}
@@ -880,6 +1179,182 @@ const Parity = () => {
           point={resultPopupData.point}
           amount={resultPopupData.amount}
         />
+      )}
+
+      {/* MODAL 5: Order Detail Modal */}
+      {selectedOrderDetail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in select-none">
+          <div className="w-full max-w-sm bg-white rounded-2xl p-5 shadow-2xl flex flex-col max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-blue-600" />
+                <h3 className="font-bold text-base text-gray-900">Order Details</h3>
+              </div>
+              <button
+                onClick={() => handleSelectOrderDetail(null)}
+                className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-sm cursor-pointer transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Result Status Banner */}
+            {selectedOrderDetail.result === 'WIN' && (
+              <div className="p-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl mb-3.5 shadow-sm flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center font-bold text-lg">
+                    ✓
+                  </div>
+                  <div>
+                    <span className="text-xs uppercase tracking-wider font-semibold opacity-90 block">Status</span>
+                    <span className="text-sm font-black">Congratulations! Won</span>
+                  </div>
+                </div>
+                <span className="text-base font-black tracking-tight">
+                  +₹{Number(selectedOrderDetail.winAmount || 0).toFixed(2)}
+                </span>
+              </div>
+            )}
+
+            {selectedOrderDetail.result === 'LOSE' && (
+              <div className="p-3 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-xl mb-3.5 shadow-sm flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center font-bold text-base">
+                    ✕
+                  </div>
+                  <div>
+                    <span className="text-xs uppercase tracking-wider font-semibold opacity-90 block">Status</span>
+                    <span className="text-sm font-black">Settled: Failed</span>
+                  </div>
+                </div>
+                <span className="text-base font-black tracking-tight">
+                  -₹{Number(selectedOrderDetail.amount || 0).toFixed(2)}
+                </span>
+              </div>
+            )}
+
+            {selectedOrderDetail.result === 'PENDING' && (
+              <div className="p-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl mb-3.5 shadow-sm flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                    <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping" />
+                  </div>
+                  <div>
+                    <span className="text-xs uppercase tracking-wider font-semibold opacity-90 block">Status</span>
+                    <span className="text-sm font-bold">Waiting for Settlement</span>
+                  </div>
+                </div>
+                <span className="text-xs font-semibold bg-white/20 px-2 py-1 rounded-md">
+                  In Progress
+                </span>
+              </div>
+            )}
+
+            {/* Detailed Specifications List */}
+            <div className="divide-y divide-gray-100 text-xs">
+              <div className="py-2 flex items-center justify-between">
+                <span className="text-gray-400 font-medium">Period</span>
+                <span className="font-bold text-gray-800">{selectedOrderDetail.period}</span>
+              </div>
+
+              <div className="py-2 flex items-center justify-between">
+                <span className="text-gray-400 font-medium">Contract Money</span>
+                <span className="font-semibold text-gray-700">₹{selectedOrderDetail.contractMoney}</span>
+              </div>
+
+              <div className="py-2 flex items-center justify-between">
+                <span className="text-gray-400 font-medium">Contract Multiplier</span>
+                <span className="font-semibold text-gray-700">× {selectedOrderDetail.quantity}</span>
+              </div>
+
+              <div className="py-2 flex items-center justify-between">
+                <span className="text-gray-400 font-medium">Total Bet Amount</span>
+                <span className="font-bold text-gray-900">₹{selectedOrderDetail.amount}</span>
+              </div>
+
+              <div className="py-2 flex items-center justify-between">
+                <span className="text-gray-400 font-medium">Delivery (Net 98%)</span>
+                <span className="font-semibold text-gray-700">₹{(selectedOrderDetail.amount * 0.98).toFixed(2)}</span>
+              </div>
+
+              <div className="py-2 flex items-center justify-between">
+                <span className="text-gray-400 font-medium">Platform Fee (2%)</span>
+                <span className="font-semibold text-gray-500">₹{(selectedOrderDetail.amount * 0.02).toFixed(2)}</span>
+              </div>
+
+              <div className="py-2 flex items-center justify-between">
+                <span className="text-gray-400 font-medium">Your Selection</span>
+                <div>
+                  {renderChoiceBadge(selectedOrderDetail.choice, selectedOrderDetail.betType)}
+                </div>
+              </div>
+
+              {/* Opening Price & Result if settled */}
+              {selectedOrderDetail.gameId && typeof selectedOrderDetail.gameId === 'object' && (
+                <>
+                  <div className="py-2 flex items-center justify-between">
+                    <span className="text-gray-400 font-medium">Open Price</span>
+                    <span className="font-semibold text-gray-700">
+                      {selectedOrderDetail.gameId.price ? `$${selectedOrderDetail.gameId.price}` : '--'}
+                    </span>
+                  </div>
+
+                  <div className="py-2 flex items-center justify-between">
+                    <span className="text-gray-400 font-medium">Result Number</span>
+                    {selectedOrderDetail.gameId.resultNumber !== undefined && selectedOrderDetail.gameId.resultNumber !== null ? (
+                      <div className="flex items-center gap-1.5">
+                        {renderBadge({
+                          resultNumber: selectedOrderDetail.gameId.resultNumber,
+                        })}
+                        <span className="font-bold text-gray-800">
+                          ({(selectedOrderDetail.gameId.resultColors || []).join('+')})
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 italic">Pending...</span>
+                    )}
+                  </div>
+                </>
+              )}
+
+              <div className="py-2 flex items-center justify-between">
+                <span className="text-gray-400 font-medium">Order Time</span>
+                <span className="font-medium text-gray-600">{formatOrderTime(selectedOrderDetail.createdAt)}</span>
+              </div>
+
+              <div className="py-2 flex items-center justify-between gap-2">
+                <span className="text-gray-400 font-medium shrink-0">Order ID</span>
+                <div className="flex items-center gap-1 overflow-hidden">
+                  <span className="font-mono text-[11px] text-gray-500 truncate max-w-[170px]">
+                    {selectedOrderDetail._id}
+                  </span>
+                  <button
+                    onClick={() => handleCopyOrderId(selectedOrderDetail._id)}
+                    className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors cursor-pointer"
+                    title="Copy Order ID"
+                  >
+                    {copiedOrderId === selectedOrderDetail._id ? (
+                      <span className="text-[10px] text-emerald-600 font-bold">Copied!</span>
+                    ) : (
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => handleSelectOrderDetail(null)}
+              className="mt-4 w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs rounded-xl cursor-pointer transition-colors active:scale-95"
+            >
+              Close
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

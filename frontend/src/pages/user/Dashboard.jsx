@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -33,134 +33,68 @@ import {
   Building2,
   QrCode,
   CheckCircle2,
+  Loader2,
+  Trash2,
 } from 'lucide-react';
-import { logoutUser } from '../../store/slices/authSlice';
+import { logoutUser, getMeUser, setWalletBalance } from '../../store/slices/authSlice';
+import { getMyBetsApi } from '../../apis/game.api';
+import {
+  getWalletSummaryApi,
+  getTransactionsApi,
+  rechargeWalletApi,
+  withdrawWalletApi,
+  claimCheckInApi,
+  addBankAccountApi,
+  deleteBankAccountApi,
+} from '../../apis/wallet.api';
 
-// Mock Bet History Data
-const DUMMY_BET_HISTORY = [
-  {
-    id: 'BET-98214',
-    game: 'Fast-Parity',
-    short: 'FP',
-    period: '2108231872',
-    select: 'Green (2x)',
-    amount: 500,
-    payout: 980,
-    status: 'WON',
-    time: '2 mins ago',
-    color: 'emerald',
-  },
-  {
-    id: 'BET-98211',
-    game: 'Fast-Parity',
-    short: 'FP',
-    period: '2108231871',
-    select: 'Number 5 (9x)',
-    amount: 100,
-    payout: 0,
-    status: 'LOST',
-    time: '15 mins ago',
-    color: 'rose',
-  },
-  {
-    id: 'BET-98204',
-    game: 'Crash',
-    short: 'CR',
-    period: 'CR-8840',
-    select: 'Cashed out 3.42x',
-    amount: 250,
-    payout: 855,
-    status: 'WON',
-    time: '1 hour ago',
-    color: 'emerald',
-  },
-  {
-    id: 'BET-98190',
-    game: 'MineSweeper',
-    short: 'MS',
-    period: 'MS-2041',
-    select: '6 Boxes Cleared',
-    amount: 200,
-    payout: 540,
-    status: 'WON',
-    time: '3 hours ago',
-    color: 'emerald',
-  },
-  {
-    id: 'BET-98177',
-    game: 'Andar Bahar',
-    short: 'AB',
-    period: 'AB-4309',
-    select: 'Bahar (2x)',
-    amount: 1000,
-    payout: 0,
-    status: 'LOST',
-    time: 'Yesterday',
-    color: 'rose',
-  },
-];
-
-// Mock Transactions Data (Deposits, Withdrawals, Rewards)
-const DUMMY_TRANSACTIONS = [
-  {
-    id: 'TXN-773901',
-    type: 'Recharge',
-    method: 'UPI / PhonePe',
-    amount: 2000,
-    status: 'SUCCESS',
-    date: '16 Sep, 21:40',
-    isPositive: true,
-  },
-  {
-    id: 'TXN-773822',
-    type: 'Withdrawal',
-    method: 'IMPS Bank (HDFC ****4102)',
-    amount: 4500,
-    status: 'SUCCESS',
-    date: '15 Sep, 18:22',
-    isPositive: false,
-  },
-  {
-    id: 'TXN-773704',
-    type: 'Referral Bonus',
-    method: 'Tier 1 Commission',
-    amount: 350,
-    status: 'SUCCESS',
-    date: '15 Sep, 12:05',
-    isPositive: true,
-  },
-  {
-    id: 'TXN-773590',
-    type: 'Daily Check-in',
-    method: 'Day 5 Bonus',
-    amount: 50,
-    status: 'SUCCESS',
-    date: '14 Sep, 09:15',
-    isPositive: true,
-  },
-  {
-    id: 'TXN-773418',
-    type: 'Withdrawal',
-    method: 'Paytm UPI',
-    amount: 1800,
-    status: 'SUCCESS',
-    date: '12 Sep, 20:01',
-    isPositive: false,
-  },
-];
+/**
+ * Format relative or localized timestamps cleanly
+ */
+const formatRelativeTime = (dateStr) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diffSec = Math.floor((now - d) / 1000);
+  if (diffSec < 60) return 'Just now';
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+  return d.toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
-  // States
+  // General UI States
   const [showBalance, setShowBalance] = useState(true);
   const [copiedField, setCopiedField] = useState(null);
   const [activeTab, setActiveTab] = useState('records'); // 'records' | 'transactions' | 'passbook' | 'security'
   const [toastMessage, setToastMessage] = useState(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [gameFilter, setGameFilter] = useState('ALL');
+
+  // Backend Live Data States
+  const [walletSummary, setWalletSummary] = useState(null);
+  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
+
+  const [bets, setBets] = useState([]);
+  const [isBetsLoading, setIsBetsLoading] = useState(false);
+
+  const [transactions, setTransactions] = useState([]);
+  const [isTxnsLoading, setIsTxnsLoading] = useState(false);
+
+  const [bankAccounts, setBankAccounts] = useState([]);
+  const [isSavingBank, setIsSavingBank] = useState(false);
+  const [isRecharging, setIsRecharging] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [isClaimingCheckIn, setIsClaimingCheckIn] = useState(false);
 
   // Modals
   const [showRechargeModal, setShowRechargeModal] = useState(false);
@@ -170,27 +104,6 @@ const Dashboard = () => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Bank Form State
-  const [bankAccounts, setBankAccounts] = useState([
-    {
-      id: 1,
-      bankName: 'HDFC Bank',
-      accountNumber: '•••• •••• 4102',
-      holderName: 'Piyush Kumar',
-      ifsc: 'HDFC0001234',
-      isPrimary: true,
-      type: 'BANK',
-    },
-    {
-      id: 2,
-      bankName: 'Paytm Payments Bank',
-      accountNumber: 'paytm98765@paytm',
-      holderName: 'Piyush Kumar',
-      ifsc: 'UPI ID',
-      isPrimary: false,
-      type: 'UPI',
-    },
-  ]);
-
   const [newBank, setNewBank] = useState({
     type: 'BANK',
     bankName: '',
@@ -205,22 +118,11 @@ const Dashboard = () => {
 
   // Withdraw Form State
   const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [withdrawMethod, setWithdrawMethod] = useState('1'); // ID of bank account
-
-  // Check-in state
-  const [checkInDay, setCheckInDay] = useState(4);
-  const [claimedToday, setClaimedToday] = useState(false);
-
-  // Metadata
-  const displayName = isAuthenticated ? (user?.fullName || 'Jannat Player') : 'Guest Player';
-  const displayMobile = isAuthenticated ? (user?.mobileNumber || '+91 98765 43210') : 'Guest';
-  const displayId = isAuthenticated ? (user?._id?.slice(-8).toUpperCase() || 'JNT88492') : 'GUEST-001';
-  const displayBalance = isAuthenticated ? (user?.walletBalance ?? 1845.5).toFixed(2) : '1,845.50';
-  const referralCode = isAuthenticated ? 'JANNAT777' : 'JNT-DEMO';
+  const [withdrawMethod, setWithdrawMethod] = useState(''); // ID of selected bank account
 
   const showToast = (msg) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 2200);
+    setTimeout(() => setToastMessage(null), 2400);
   };
 
   const copyToClipboard = (text, fieldName) => {
@@ -230,39 +132,269 @@ const Dashboard = () => {
     setTimeout(() => setCopiedField(null), 1800);
   };
 
-  const handleClaimCheckIn = (day) => {
-    if (claimedToday) {
+  // =========================================================================
+  // DATA FETCHING & SYNCHRONIZATION WITH BACKEND
+  // =========================================================================
+
+  const fetchBets = async () => {
+    if (!isAuthenticated) return;
+    setIsBetsLoading(true);
+    try {
+      const res = await getMyBetsApi({ limit: 40 });
+      if (res?.success && Array.isArray(res?.bets)) {
+        const formatted = res.bets.map((b) => {
+          const isWin = b.result === 'WIN';
+          const isLose = b.result === 'LOSE';
+          const selectLabel =
+            b.betType === 'number'
+              ? `Number ${b.choice} (9x)`
+              : `${b.choice.toUpperCase()} (${
+                  b.choice.toLowerCase() === 'violet' ? '4.5x' : '2x'
+                })`;
+
+          return {
+            id: b._id,
+            game: 'Fast-Parity',
+            short: 'FP',
+            period: b.period,
+            select: selectLabel,
+            amount: b.amount,
+            payout: b.winAmount || 0,
+            status: isWin ? 'WON' : isLose ? 'LOST' : 'WAITING',
+            time: formatRelativeTime(b.createdAt),
+            color: isWin ? 'emerald' : isLose ? 'rose' : 'amber',
+          };
+        });
+        setBets(formatted);
+      }
+    } catch (err) {
+      console.error('Failed to load bets:', err);
+    } finally {
+      setIsBetsLoading(false);
+    }
+  };
+
+  const fetchTransactions = async () => {
+    if (!isAuthenticated) return;
+    setIsTxnsLoading(true);
+    try {
+      const res = await getTransactionsApi({ limit: 30 });
+      if (res?.success && Array.isArray(res?.transactions)) {
+        setTransactions(res.transactions);
+      }
+    } catch (err) {
+      console.error('Failed to load transactions:', err);
+    } finally {
+      setIsTxnsLoading(false);
+    }
+  };
+
+  const fetchDashboardData = async () => {
+    if (!isAuthenticated) return;
+    setIsSummaryLoading(true);
+    try {
+      // 1. Refresh user profile in Redux from backend /api/auth/me
+      dispatch(getMeUser());
+
+      // 2. Fetch live wallet summary & statistics from /api/wallet/summary
+      const summaryRes = await getWalletSummaryApi();
+      if (summaryRes?.success && summaryRes?.summary) {
+        setWalletSummary(summaryRes.summary);
+        const accounts = summaryRes.summary.bankAccounts || [];
+        setBankAccounts(accounts);
+        if (accounts.length > 0 && !withdrawMethod) {
+          setWithdrawMethod(accounts[0]._id);
+        }
+      }
+
+      // 3. Fetch Bet Records
+      fetchBets();
+
+      // 4. Fetch Transactions
+      fetchTransactions();
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+    } finally {
+      setIsSummaryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchDashboardData();
+    }
+  }, [isAuthenticated]);
+
+  // =========================================================================
+  // ACTION HANDLERS
+  // =========================================================================
+
+  const handleClaimCheckIn = async (day) => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    if (walletSummary?.claimedToday) {
       showToast("Already claimed today's bonus.");
       return;
     }
-    setClaimedToday(true);
-    setCheckInDay((prev) => Math.min(prev + 1, 7));
-    showToast(`Claimed Day ${day} Bonus: +₹${day * 10 + 10}`);
+
+    setIsClaimingCheckIn(true);
+    try {
+      const res = await claimCheckInApi();
+      if (res?.success) {
+        dispatch(setWalletBalance(res.newBalance));
+        setWalletSummary((prev) => ({
+          ...prev,
+          walletBalance: res.newBalance,
+          checkInStreak: res.newStreak,
+          claimedToday: true,
+        }));
+        showToast(res.message || `Claimed Day ${res.newStreak} Bonus: +₹${res.bonusAmount}!`);
+        fetchTransactions();
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to claim daily bonus');
+    } finally {
+      setIsClaimingCheckIn(false);
+    }
   };
 
-  const handleAddBankAccount = (e) => {
+  const handleAddBankAccount = async (e) => {
     e.preventDefault();
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
     if (!newBank.bankName || !newBank.accountNumber || !newBank.holderName) {
       showToast('Please fill all required fields');
       return;
     }
 
-    setBankAccounts((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
+    setIsSavingBank(true);
+    try {
+      const res = await addBankAccountApi({
+        type: newBank.type,
         bankName: newBank.bankName,
         accountNumber: newBank.accountNumber,
         holderName: newBank.holderName,
-        ifsc: newBank.ifsc || 'UPI',
-        isPrimary: false,
-        type: newBank.type,
-      },
-    ]);
+        ifsc: newBank.ifsc,
+      });
 
-    setNewBank({ type: 'BANK', bankName: '', accountNumber: '', holderName: '', ifsc: '' });
-    setShowAddBankModal(false);
-    showToast('Payment account added successfully!');
+      if (res?.success && res.bankAccounts) {
+        setBankAccounts(res.bankAccounts);
+        if (!withdrawMethod && res.bankAccounts.length > 0) {
+          setWithdrawMethod(res.bankAccounts[0]._id);
+        }
+        setShowAddBankModal(false);
+        setNewBank({ type: 'BANK', bankName: '', accountNumber: '', holderName: '', ifsc: '' });
+        showToast('Payment account saved successfully!');
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to save payout account');
+    } finally {
+      setIsSavingBank(false);
+    }
+  };
+
+  const handleDeleteBankAccount = async (id) => {
+    try {
+      const res = await deleteBankAccountApi(id);
+      if (res?.success && res.bankAccounts) {
+        setBankAccounts(res.bankAccounts);
+        if (withdrawMethod === id) {
+          setWithdrawMethod(res.bankAccounts[0]?._id || '');
+        }
+        showToast('Account removed');
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to remove account');
+    }
+  };
+
+  const handleRechargeSubmit = async () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    const num = Number(rechargeAmount);
+    if (isNaN(num) || num < 20) {
+      showToast('Minimum recharge is ₹20');
+      return;
+    }
+
+    setIsRecharging(true);
+    try {
+      const res = await rechargeWalletApi({
+        amount: num,
+        channel: rechargeChannel,
+      });
+
+      if (res?.success) {
+        dispatch(setWalletBalance(res.newBalance));
+        setWalletSummary((prev) => ({
+          ...prev,
+          walletBalance: res.newBalance,
+          totalRecharged: (prev?.totalRecharged || 0) + num,
+        }));
+        setShowRechargeModal(false);
+        showToast(`Recharge of ₹${num} completed!`);
+        fetchTransactions();
+      }
+    } catch (err) {
+      showToast(err.message || 'Recharge failed');
+    } finally {
+      setIsRecharging(false);
+    }
+  };
+
+  const handleWithdrawSubmit = async () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    const num = Number(withdrawAmount);
+    if (isNaN(num) || num < 200) {
+      showToast('Minimum withdrawal is ₹200');
+      return;
+    }
+    const currentBalance = user?.walletBalance || 0;
+    if (num > currentBalance) {
+      showToast(`Insufficient balance! Available: ₹${currentBalance.toFixed(2)}`);
+      return;
+    }
+
+    if (!bankAccounts || bankAccounts.length === 0) {
+      showToast('Please add a payout account first');
+      setShowWithdrawModal(false);
+      setShowAddBankModal(true);
+      return;
+    }
+
+    setIsWithdrawing(true);
+    try {
+      const res = await withdrawWalletApi({
+        amount: num,
+        bankAccountId: withdrawMethod || bankAccounts[0]?._id,
+      });
+
+      if (res?.success) {
+        dispatch(setWalletBalance(res.newBalance));
+        setWalletSummary((prev) => ({
+          ...prev,
+          walletBalance: res.newBalance,
+          totalWithdrawn: (prev?.totalWithdrawn || 0) + num,
+        }));
+        setShowWithdrawModal(false);
+        setWithdrawAmount('');
+        showToast(`Withdrawal of ₹${num} processed!`);
+        fetchTransactions();
+      }
+    } catch (err) {
+      showToast(err.message || 'Withdrawal failed');
+    } finally {
+      setIsWithdrawing(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -276,9 +408,28 @@ const Dashboard = () => {
     }
   };
 
-  const filteredBets = gameFilter === 'ALL'
-    ? DUMMY_BET_HISTORY
-    : DUMMY_BET_HISTORY.filter((b) => b.game.toLowerCase().includes(gameFilter.toLowerCase()));
+  // Derived user metadata
+  const displayName = isAuthenticated ? (user?.fullName || 'Jannat Player') : 'Guest Player';
+  const displayMobile = isAuthenticated ? (user?.mobileNumber || 'Guest') : 'Guest';
+  const displayId = isAuthenticated ? (user?._id?.slice(-8).toUpperCase() || 'JNT88492') : 'GUEST-001';
+  const displayBalance = isAuthenticated
+    ? (Number(user?.walletBalance) || 0).toFixed(2)
+    : '0.00';
+  const referralCode = isAuthenticated
+    ? (walletSummary?.referralCode || user?.mobileNumber || user?._id?.slice(-6).toUpperCase() || 'JANNAT777')
+    : 'JNT-DEMO';
+  const vipLevel = walletSummary?.vipLevel || 1;
+
+  // Streak calculation
+  const currentStreak = walletSummary?.checkInStreak || 0;
+  const isClaimedToday = walletSummary?.claimedToday || false;
+  const nextClaimDay = isClaimedToday ? currentStreak : Math.min(currentStreak + 1, 7);
+
+  // Filtered bets
+  const filteredBets =
+    gameFilter === 'ALL'
+      ? bets
+      : bets.filter((b) => b.game.toLowerCase().includes(gameFilter.toLowerCase()));
 
   return (
     <div className="w-full min-h-full bg-[#FAF8F5] flex flex-col font-sans select-none pb-24 text-gray-800 relative">
@@ -311,12 +462,14 @@ const Dashboard = () => {
               showToast(soundEnabled ? 'Audio Muted' : 'Audio Enabled');
             }}
             className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/15 flex items-center justify-center text-white/80 transition-colors cursor-pointer"
+            title="Toggle Audio"
           >
             {soundEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
           </button>
           <button
             onClick={() => showToast('Telegram: @JannatSupportBot')}
             className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/15 flex items-center justify-center text-white/80 transition-colors cursor-pointer"
+            title="24/7 Support"
           >
             <PhoneCall size={13} />
           </button>
@@ -328,7 +481,7 @@ const Dashboard = () => {
         <div className="w-full bg-amber-50 border-b border-amber-200/60 px-4 py-2 flex items-center justify-between text-xs text-[#78350F]">
           <div className="flex items-center gap-1.5 font-medium text-[11px]">
             <Lock size={12} className="text-amber-700" />
-            <span>Login to access withdrawals & rewards</span>
+            <span>Login to access your wallet, withdrawals & records</span>
           </div>
           <button
             onClick={() => navigate('/login')}
@@ -340,7 +493,7 @@ const Dashboard = () => {
       )}
 
       {/* ========================================================================= */}
-      {/* 2. SOLID LUXURY PROFILE & WALLET CARD (NO MUDDY GRADIENTS)                */}
+      {/* 2. SOLID LUXURY PROFILE & WALLET CARD                                     */}
       {/* ========================================================================= */}
       <div className="w-full px-3.5 pt-3">
         <div className="w-full rounded-2xl bg-[#1C120C] p-4 text-white border border-[#2D1E16] shadow-sm">
@@ -358,7 +511,7 @@ const Dashboard = () => {
                 <div className="flex items-center gap-1.5">
                   <h2 className="text-sm font-bold text-white font-serif">{displayName}</h2>
                   <span className="bg-amber-400/20 text-amber-300 text-[9px] font-bold px-1.5 py-0.2 rounded border border-amber-400/30 uppercase">
-                    VIP 3
+                    VIP {vipLevel}
                   </span>
                 </div>
                 
@@ -385,10 +538,18 @@ const Dashboard = () => {
           {/* Balance Row */}
           <div className="mt-4 pt-3.5 border-t border-white/10 flex items-end justify-between">
             <div>
-              <div className="flex items-center gap-1.5 text-zinc-400 text-[11px] font-medium">
+              <div className="flex items-center gap-2 text-zinc-400 text-[11px] font-medium">
                 <span>Wallet Balance</span>
                 <button onClick={() => setShowBalance(!showBalance)} className="cursor-pointer text-zinc-400 hover:text-zinc-200">
                   {showBalance ? <Eye size={12} /> : <EyeOff size={12} />}
+                </button>
+                <button
+                  onClick={fetchDashboardData}
+                  disabled={isSummaryLoading}
+                  className="cursor-pointer text-zinc-400 hover:text-zinc-200 transition-colors"
+                  title="Sync Balance"
+                >
+                  <RefreshCw size={11} className={isSummaryLoading ? 'animate-spin text-amber-400' : ''} />
                 </button>
               </div>
               <div className="text-xl font-black text-white font-mono mt-0.5">
@@ -419,33 +580,35 @@ const Dashboard = () => {
       </div>
 
       {/* ========================================================================= */}
-      {/* 3. CLEAN DAILY CHECK-IN STRIP (CLEAN & SLEEK)                             */}
+      {/* 3. 7-DAY STREAK DAILY CHECK-IN STRIP                                       */}
       {/* ========================================================================= */}
       <div className="w-full px-3.5 pt-3">
         <div className="w-full bg-white rounded-2xl p-3 border border-gray-200/80 shadow-xs">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
               <CalendarCheck size={14} className="text-[#8B3A13]" />
-              <span className="text-xs font-bold text-gray-900">7-Day Streak</span>
+              <span className="text-xs font-bold text-gray-900">
+                7-Day Streak {currentStreak > 0 ? `(Day ${currentStreak})` : ''}
+              </span>
             </div>
             <button
-              onClick={() => handleClaimCheckIn(checkInDay)}
-              disabled={claimedToday}
+              onClick={() => handleClaimCheckIn(nextClaimDay)}
+              disabled={isClaimedToday || isClaimingCheckIn}
               className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                claimedToday
+                isClaimedToday
                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-[#8B3A13] text-white hover:bg-[#742E0E] active:scale-95'
+                  : 'bg-[#8B3A13] text-white hover:bg-[#742E0E] active:scale-95 shadow-xs'
               }`}
             >
-              {claimedToday ? 'Claimed ✓' : 'Claim Daily'}
+              {isClaimingCheckIn ? 'Claiming...' : isClaimedToday ? 'Claimed ✓' : 'Claim Daily'}
             </button>
           </div>
 
           {/* 7-Day Grid */}
           <div className="grid grid-cols-7 gap-1">
             {[1, 2, 3, 4, 5, 6, 7].map((day) => {
-              const isPast = day < checkInDay;
-              const isCurrent = day === checkInDay;
+              const isPast = day < nextClaimDay || (day === nextClaimDay && isClaimedToday);
+              const isCurrent = day === nextClaimDay && !isClaimedToday;
               return (
                 <div
                   key={day}
@@ -453,7 +616,7 @@ const Dashboard = () => {
                     isPast
                       ? 'bg-emerald-50/80 border-emerald-200 text-emerald-800'
                       : isCurrent
-                      ? 'bg-amber-50 border-amber-400 text-[#8B3A13] font-bold'
+                      ? 'bg-amber-50 border-amber-400 text-[#8B3A13] font-bold shadow-2xs'
                       : 'bg-gray-50/50 border-gray-200/60 text-gray-400'
                   }`}
                 >
@@ -485,7 +648,11 @@ const Dashboard = () => {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  if (tab.id === 'records' && bets.length === 0) fetchBets();
+                  if (tab.id === 'transactions' && transactions.length === 0) fetchTransactions();
+                }}
                 className={`py-2 rounded-lg text-xs font-bold flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer ${
                   isActive
                     ? 'bg-white text-gray-900 shadow-xs'
@@ -500,7 +667,7 @@ const Dashboard = () => {
         </div>
 
         {/* ===================================================================== */}
-        {/* TAB 1: BET RECORDS                                                    */}
+        {/* TAB 1: BET RECORDS (LIVE DATA)                                        */}
         {/* ===================================================================== */}
         {activeTab === 'records' && (
           <div className="mt-3 space-y-2">
@@ -522,97 +689,159 @@ const Dashboard = () => {
             </div>
 
             {/* List */}
-            {filteredBets.map((item) => (
-              <div
-                key={item.id}
-                className="bg-white rounded-xl p-3 border border-gray-200/80 shadow-xs flex items-center justify-between"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-[11px] text-gray-700">
-                    {item.short}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-xs text-gray-900">{item.game}</span>
-                      <span className="text-[10px] text-gray-400 font-mono">#{item.period}</span>
-                    </div>
-                    <p className="text-[10px] text-gray-500">{item.select}</p>
-                    <span className="text-[9px] text-gray-400">{item.time}</span>
-                  </div>
-                </div>
-
-                <div className="text-right">
-                  <span
-                    className={`text-[9px] font-bold px-1.5 py-0.2 rounded uppercase ${
-                      item.status === 'WON'
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : 'bg-rose-50 text-rose-700 border border-rose-200'
-                    }`}
-                  >
-                    {item.status}
-                  </span>
-                  <div className="text-xs font-black mt-1">
-                    {item.status === 'WON' ? (
-                      <span className="text-emerald-600">+₹{item.payout}</span>
-                    ) : (
-                      <span className="text-rose-500">-₹{item.amount}</span>
-                    )}
-                  </div>
-                </div>
+            {isBetsLoading ? (
+              <div className="py-8 flex flex-col items-center justify-center text-gray-400 gap-2">
+                <Loader2 size={20} className="animate-spin text-[#8B3A13]" />
+                <span className="text-xs">Loading bet logs...</span>
               </div>
-            ))}
+            ) : filteredBets.length === 0 ? (
+              <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-xs text-center flex flex-col items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-200/60 flex items-center justify-center text-[#8B3A13] mb-2.5">
+                  <History size={20} />
+                </div>
+                <h4 className="text-xs font-bold text-gray-900">No Bet Records Found</h4>
+                <p className="text-[11px] text-gray-500 max-w-xs mt-0.5">
+                  {gameFilter === 'ALL' || gameFilter === 'Fast-Parity'
+                    ? "You haven't placed any bets yet. Play Fast-Parity and win up to 9x!"
+                    : `No bet activity recorded for ${gameFilter}.`}
+                </p>
+                <button
+                  onClick={() => navigate('/parity')}
+                  className="mt-3 px-4 py-1.5 bg-[#8B3A13] hover:bg-[#742E0E] text-white font-bold text-xs rounded-xl shadow-xs active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>Play Fast-Parity</span>
+                  <ArrowRight size={12} />
+                </button>
+              </div>
+            ) : (
+              filteredBets.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-white rounded-xl p-3 border border-gray-200/80 shadow-xs flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-[11px] text-gray-700">
+                      {item.short}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-xs text-gray-900">{item.game}</span>
+                        <span className="text-[10px] text-gray-400 font-mono">#{item.period}</span>
+                      </div>
+                      <p className="text-[10px] text-gray-500">{item.select}</p>
+                      <span className="text-[9px] text-gray-400">{item.time}</span>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <span
+                      className={`text-[9px] font-bold px-1.5 py-0.2 rounded uppercase ${
+                        item.status === 'WON'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : item.status === 'LOST'
+                          ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                          : 'bg-amber-50 text-amber-700 border border-amber-200'
+                      }`}
+                    >
+                      {item.status}
+                    </span>
+                    <div className="text-xs font-black mt-1">
+                      {item.status === 'WON' ? (
+                        <span className="text-emerald-600">+₹{item.payout}</span>
+                      ) : item.status === 'LOST' ? (
+                        <span className="text-rose-500">-₹{item.amount}</span>
+                      ) : (
+                        <span className="text-amber-600">₹{item.amount}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         )}
 
         {/* ===================================================================== */}
-        {/* TAB 2: TRANSACTIONS (Recharge, Withdrawal, Bonus Ledger)              */}
+        {/* TAB 2: TRANSACTIONS (LIVE RECHARGES, WITHDRAWALS, CHECK-INS)          */}
         {/* ===================================================================== */}
         {activeTab === 'transactions' && (
           <div className="mt-3 space-y-2">
-            {DUMMY_TRANSACTIONS.map((txn) => (
-              <div
-                key={txn.id}
-                className="bg-white rounded-xl p-3 border border-gray-200/80 shadow-xs flex items-center justify-between"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                      txn.isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'
-                    }`}
-                  >
-                    {txn.isPositive ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}
-                  </div>
-                  <div>
-                    <span className="font-bold text-xs text-gray-900">{txn.type}</span>
-                    <p className="text-[10px] text-gray-500">{txn.method}</p>
-                    <span className="text-[9px] text-gray-400">{txn.date}</span>
-                  </div>
-                </div>
-
-                <div className="text-right">
-                  <span
-                    className={`text-sm font-black ${
-                      txn.isPositive ? 'text-emerald-600' : 'text-gray-900'
-                    }`}
-                  >
-                    {txn.isPositive ? `+₹${txn.amount}` : `-₹${txn.amount}`}
-                  </span>
-                  <span className="text-[9px] font-bold text-emerald-600 block mt-0.5">
-                    ● {txn.status}
-                  </span>
-                </div>
+            {isTxnsLoading ? (
+              <div className="py-8 flex flex-col items-center justify-center text-gray-400 gap-2">
+                <Loader2 size={20} className="animate-spin text-[#8B3A13]" />
+                <span className="text-xs">Loading ledger...</span>
               </div>
-            ))}
+            ) : transactions.length === 0 ? (
+              <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-xs text-center flex flex-col items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-blue-50 border border-blue-200/60 flex items-center justify-center text-blue-600 mb-2.5">
+                  <CreditCard size={20} />
+                </div>
+                <h4 className="text-xs font-bold text-gray-900">No Transactions Yet</h4>
+                <p className="text-[11px] text-gray-500 max-w-xs mt-0.5">
+                  Your recharge, withdrawal, and check-in streak records will appear here.
+                </p>
+                <button
+                  onClick={() => setShowRechargeModal(true)}
+                  className="mt-3 px-4 py-1.5 bg-[#2196f3] hover:bg-blue-600 text-white font-bold text-xs rounded-xl shadow-xs active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <ArrowDownLeft size={12} />
+                  <span>Recharge Wallet</span>
+                </button>
+              </div>
+            ) : (
+              transactions.map((txn) => (
+                <div
+                  key={txn._id || txn.id}
+                  className="bg-white rounded-xl p-3 border border-gray-200/80 shadow-xs flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                        txn.isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'
+                      }`}
+                    >
+                      {txn.isPositive ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}
+                    </div>
+                    <div>
+                      <span className="font-bold text-xs text-gray-900">{txn.title || txn.type}</span>
+                      <p className="text-[10px] text-gray-500">{txn.method}</p>
+                      <span className="text-[9px] text-gray-400">{formatRelativeTime(txn.createdAt)}</span>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <span
+                      className={`text-sm font-black ${
+                        txn.isPositive ? 'text-emerald-600' : 'text-gray-900'
+                      }`}
+                    >
+                      {txn.isPositive ? `+₹${txn.amount}` : `-₹${txn.amount}`}
+                    </span>
+                    <span
+                      className={`text-[9px] font-bold block mt-0.5 ${
+                        txn.status === 'SUCCESS'
+                          ? 'text-emerald-600'
+                          : txn.status === 'FAILED'
+                          ? 'text-rose-500'
+                          : 'text-amber-500'
+                      }`}
+                    >
+                      ● {txn.status}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         )}
 
         {/* ===================================================================== */}
-        {/* TAB 3: PASSBOOK (Linked Bank Accounts & UPI details)                  */}
+        {/* TAB 3: PASSBOOK (SAVED BANK & UPI ACCOUNTS)                            */}
         {/* ===================================================================== */}
         {activeTab === 'passbook' && (
           <div className="mt-3 space-y-2.5">
             
-            {/* Add Bank Button */}
+            {/* Header / Add Button */}
             <div className="flex items-center justify-between px-1">
               <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">
                 Linked Payout Accounts ({bankAccounts.length})
@@ -627,41 +856,73 @@ const Dashboard = () => {
             </div>
 
             {/* Bank Accounts List */}
-            {bankAccounts.map((acc) => (
-              <div
-                key={acc.id}
-                className="bg-white rounded-xl p-3.5 border border-gray-200/80 shadow-xs relative"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700">
-                      {acc.type === 'BANK' ? <Building2 size={18} /> : <QrCode size={18} />}
+            {bankAccounts.length === 0 ? (
+              <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-xs text-center flex flex-col items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-200/60 flex items-center justify-center text-[#8B3A13] mb-2.5">
+                  <Building2 size={20} />
+                </div>
+                <h4 className="text-xs font-bold text-gray-900">No Payout Accounts Linked</h4>
+                <p className="text-[11px] text-gray-500 max-w-xs mt-0.5">
+                  Add your Bank Account or UPI ID to easily withdraw your winnings.
+                </p>
+                <button
+                  onClick={() => setShowAddBankModal(true)}
+                  className="mt-3 px-4 py-1.5 bg-[#8B3A13] hover:bg-[#742E0E] text-white font-bold text-xs rounded-xl shadow-xs active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <Plus size={13} />
+                  <span>Add Bank / UPI</span>
+                </button>
+              </div>
+            ) : (
+              bankAccounts.map((acc) => (
+                <div
+                  key={acc._id || acc.id}
+                  className="bg-white rounded-xl p-3.5 border border-gray-200/80 shadow-xs relative"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700">
+                        {acc.type === 'BANK' ? <Building2 size={18} /> : <QrCode size={18} />}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <h4 className="text-xs font-bold text-gray-900">{acc.bankName}</h4>
+                          {acc.isPrimary && (
+                            <span className="text-[9px] bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.2 rounded border border-emerald-200">
+                              Primary
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs font-mono font-bold text-gray-800 mt-0.5">
+                          {acc.type === 'BANK' && acc.accountNumber.length > 4
+                            ? `•••• •••• ${acc.accountNumber.slice(-4)}`
+                            : acc.accountNumber}
+                        </p>
+                        <div className="flex items-center gap-2 text-[10px] text-gray-500 mt-1">
+                          <span>Holder: <strong>{acc.holderName}</strong></span>
+                          {acc.type === 'BANK' && acc.ifsc && <span>IFSC: {acc.ifsc}</span>}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <h4 className="text-xs font-bold text-gray-900">{acc.bankName}</h4>
-                        {acc.isPrimary && (
-                          <span className="text-[9px] bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.2 rounded border border-emerald-200">
-                            Primary
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs font-mono font-bold text-gray-800 mt-0.5">
-                        {acc.accountNumber}
-                      </p>
-                      <div className="flex items-center gap-2 text-[10px] text-gray-500 mt-1">
-                        <span>Holder: <strong>{acc.holderName}</strong></span>
-                        {acc.ifsc !== 'UPI' && <span>IFSC: {acc.ifsc}</span>}
-                      </div>
+
+                    <div className="flex flex-col items-end gap-1.5">
+                      <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <CheckCircle2 size={10} /> Verified
+                      </span>
+                      {acc._id && (
+                        <button
+                          onClick={() => handleDeleteBankAccount(acc._id)}
+                          className="text-[10px] text-gray-400 hover:text-rose-500 transition-colors cursor-pointer p-1"
+                          title="Remove Account"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      )}
                     </div>
                   </div>
-
-                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <CheckCircle2 size={10} /> Verified
-                  </span>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
 
             {/* Quick Withdraw Prompt */}
             <div className="p-3 bg-gray-100/70 rounded-xl flex items-center justify-between text-xs">
@@ -731,7 +992,7 @@ const Dashboard = () => {
       </div>
 
       {/* ========================================================================= */}
-      {/* MODAL 1: ADD BANK ACCOUNT / UPI MODAL                                     */}
+      {/* MODAL 1: ADD BANK ACCOUNT / UPI MODAL (SYNCED WITH BACKEND)               */}
       {/* ========================================================================= */}
       {showAddBankModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 animate-fade-in">
@@ -777,7 +1038,7 @@ const Dashboard = () => {
                 <label className="text-[11px] font-bold text-gray-700">Account Holder Name</label>
                 <input
                   type="text"
-                  placeholder="e.g. Piyush Kumar"
+                  placeholder="e.g. Priyanshu Kumar"
                   value={newBank.holderName}
                   onChange={(e) => setNewBank({ ...newBank, holderName: e.target.value })}
                   className="w-full mt-1 px-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-[#8B3A13]"
@@ -829,9 +1090,10 @@ const Dashboard = () => {
 
               <button
                 type="submit"
-                className="w-full mt-3 py-2 bg-[#8B3A13] text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer active:scale-95"
+                disabled={isSavingBank}
+                className="w-full mt-3 py-2 bg-[#8B3A13] text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer active:scale-95 disabled:opacity-50"
               >
-                Save Bank Details
+                {isSavingBank ? 'Saving to Database...' : 'Save Payout Details'}
               </button>
             </form>
           </div>
@@ -839,7 +1101,7 @@ const Dashboard = () => {
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL 2: RECHARGE DRAWER                                                  */}
+      {/* MODAL 2: RECHARGE DRAWER (SYNCED WITH BACKEND)                            */}
       {/* ========================================================================= */}
       {showRechargeModal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 animate-fade-in">
@@ -860,7 +1122,7 @@ const Dashboard = () => {
                   <button
                     key={amt}
                     onClick={() => setRechargeAmount(amt)}
-                    className={`py-1.5 rounded-lg text-xs font-bold cursor-pointer ${
+                    className={`py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all ${
                       rechargeAmount === amt
                         ? 'bg-blue-600 text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -876,7 +1138,7 @@ const Dashboard = () => {
                   <button
                     key={ch}
                     onClick={() => setRechargeChannel(ch)}
-                    className={`p-1.5 rounded-lg border text-[11px] font-bold text-center cursor-pointer ${
+                    className={`p-1.5 rounded-lg border text-[11px] font-bold text-center cursor-pointer transition-all ${
                       rechargeChannel === ch
                         ? 'border-blue-600 bg-blue-50 text-blue-700'
                         : 'border-gray-200 text-gray-600'
@@ -888,13 +1150,11 @@ const Dashboard = () => {
               </div>
 
               <button
-                onClick={() => {
-                  setShowRechargeModal(false);
-                  showToast(`Payment request generated for ₹${rechargeAmount}!`);
-                }}
-                className="w-full mt-2 py-2.5 bg-blue-600 text-white font-bold text-xs rounded-xl shadow cursor-pointer active:scale-95"
+                onClick={handleRechargeSubmit}
+                disabled={isRecharging}
+                className="w-full mt-2 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow cursor-pointer active:scale-95 disabled:opacity-50"
               >
-                Pay ₹{rechargeAmount}
+                {isRecharging ? 'Processing Recharge...' : `Pay ₹${rechargeAmount}`}
               </button>
             </div>
           </div>
@@ -902,7 +1162,7 @@ const Dashboard = () => {
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL 3: WITHDRAW DRAWER                                                  */}
+      {/* MODAL 3: WITHDRAW DRAWER (SYNCED WITH BACKEND)                            */}
       {/* ========================================================================= */}
       {showWithdrawModal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 animate-fade-in">
@@ -919,7 +1179,7 @@ const Dashboard = () => {
 
             <div className="space-y-3">
               <div className="p-2.5 bg-gray-50 rounded-xl flex items-center justify-between text-xs">
-                <span className="text-gray-500">Balance:</span>
+                <span className="text-gray-500">Available Balance:</span>
                 <span className="font-extrabold text-gray-900">₹{displayBalance}</span>
               </div>
 
@@ -935,37 +1195,71 @@ const Dashboard = () => {
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-gray-700">Select Linked Account</label>
-                <div className="space-y-1.5 mt-1">
-                  {bankAccounts.map((acc) => (
-                    <div
-                      key={acc.id}
-                      onClick={() => setWithdrawMethod(String(acc.id))}
-                      className={`p-2 rounded-lg border text-xs cursor-pointer flex items-center justify-between ${
-                        withdrawMethod === String(acc.id)
-                          ? 'border-[#8B3A13] bg-[#8B3A13]/5'
-                          : 'border-gray-200'
-                      }`}
-                    >
-                      <span className="font-bold">{acc.bankName}</span>
-                      <span className="font-mono text-gray-500 text-[11px]">{acc.accountNumber}</span>
-                    </div>
-                  ))}
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-bold text-gray-700">Select Linked Account</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowWithdrawModal(false);
+                      setShowAddBankModal(true);
+                    }}
+                    className="text-[10px] font-bold text-[#8B3A13] hover:underline"
+                  >
+                    + Add New
+                  </button>
                 </div>
+
+                {bankAccounts.length === 0 ? (
+                  <div className="mt-2 p-3 border border-dashed border-amber-300 rounded-xl bg-amber-50/50 text-center">
+                    <p className="text-[11px] text-[#78350F] font-medium">
+                      No linked accounts. Please add an account to withdraw.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowWithdrawModal(false);
+                        setShowAddBankModal(true);
+                      }}
+                      className="mt-1.5 px-3 py-1 bg-[#8B3A13] text-white rounded-lg text-[10px] font-bold"
+                    >
+                      Add Bank / UPI
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5 mt-1 max-h-40 overflow-y-auto">
+                    {bankAccounts.map((acc) => (
+                      <div
+                        key={acc._id || acc.id}
+                        onClick={() => setWithdrawMethod(acc._id)}
+                        className={`p-2 rounded-lg border text-xs cursor-pointer flex items-center justify-between transition-all ${
+                          withdrawMethod === acc._id
+                            ? 'border-[#8B3A13] bg-[#8B3A13]/5 shadow-xs'
+                            : 'border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div>
+                          <span className="font-bold">{acc.bankName}</span>
+                          <span className="text-gray-500 text-[11px] block font-mono">
+                            {acc.type === 'BANK' && acc.accountNumber.length > 4
+                              ? `•••• ${acc.accountNumber.slice(-4)}`
+                              : acc.accountNumber}
+                          </span>
+                        </div>
+                        {withdrawMethod === acc._id && (
+                          <Check size={14} className="text-[#8B3A13]" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <button
-                onClick={() => {
-                  if (!withdrawAmount || Number(withdrawAmount) < 200) {
-                    showToast('Minimum withdrawal is ₹200');
-                    return;
-                  }
-                  setShowWithdrawModal(false);
-                  showToast(`Withdrawal of ₹${withdrawAmount} initiated!`);
-                }}
-                className="w-full mt-2 py-2.5 bg-[#8B3A13] text-white font-bold text-xs rounded-xl shadow cursor-pointer active:scale-95"
+                onClick={handleWithdrawSubmit}
+                disabled={isWithdrawing}
+                className="w-full mt-2 py-2.5 bg-[#8B3A13] hover:bg-[#742E0E] text-white font-bold text-xs rounded-xl shadow cursor-pointer active:scale-95 disabled:opacity-50"
               >
-                Confirm Payout
+                {isWithdrawing ? 'Processing Payout...' : 'Confirm Payout'}
               </button>
             </div>
           </div>

@@ -23,14 +23,68 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    role: {
-      type: String,
-      enum: ['user', 'admin'],
-      default: 'user',
-    },
     isBlocked: {
       type: Boolean,
       default: false,
+    },
+    bankAccounts: [
+      {
+        type: {
+          type: String,
+          enum: ['BANK', 'UPI'],
+          default: 'BANK',
+        },
+        bankName: {
+          type: String,
+          required: true,
+          trim: true,
+        },
+        accountNumber: {
+          type: String,
+          required: true,
+          trim: true,
+        },
+        holderName: {
+          type: String,
+          required: true,
+          trim: true,
+        },
+        ifsc: {
+          type: String,
+          trim: true,
+          default: '',
+        },
+        isPrimary: {
+          type: Boolean,
+          default: false,
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+    checkInStreak: {
+      type: Number,
+      default: 0,
+    },
+    lastCheckInDate: {
+      type: Date,
+      default: null,
+    },
+    totalRecharged: {
+      type: Number,
+      default: 0,
+    },
+    totalWithdrawn: {
+      type: Number,
+      default: 0,
+    },
+    referralCode: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
     },
   },
   {
@@ -39,8 +93,12 @@ const userSchema = new mongoose.Schema(
 );
 
 
-// Hash password before saving to database
+// Hash password before saving to database and generate referralCode if needed
 userSchema.pre('save', async function () {
+  if (!this.referralCode) {
+    this.referralCode = 'JNT' + Math.random().toString(36).substring(2, 8).toUpperCase();
+  }
+
   if (!this.isModified('password')) {
     return;
   }
