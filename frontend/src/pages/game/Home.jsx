@@ -277,7 +277,7 @@ const Home = () => {
           <div>
             {isAuthenticated ? (
               <button
-                onClick={() => navigate('/my')}
+                onClick={() => navigate('/account')}
                 className="flex items-center gap-1.5 bg-[#FAF6F0] hover:bg-[#F2ECE2] border border-[#E2D8CC] px-2.5 py-1 rounded-full text-xs font-semibold text-[#4A382F] transition-colors cursor-pointer"
               >
                 <div className="w-4 h-4 rounded-full bg-[#8B3A13] text-white text-[9px] font-bold flex items-center justify-center">
@@ -373,7 +373,7 @@ const Home = () => {
                 Recharge
               </button>
               <button
-                onClick={() => handleGuardedAction('Withdraw', () => navigate('/my'))}
+                onClick={() => handleGuardedAction('Withdraw', () => navigate('/account'))}
                 className="w-26 py-1.5 bg-white/15 hover:bg-white/20 border border-white/20 text-white text-xs font-bold rounded-full active:scale-95 transition-transform cursor-pointer text-center"
               >
                 Withdraw
