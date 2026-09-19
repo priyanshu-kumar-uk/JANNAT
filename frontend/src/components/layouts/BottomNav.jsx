@@ -105,7 +105,7 @@ const BottomNav = ({ onAuthRequired, onOpenProfile }) => {
   ];
 
   return (
-    <div className="w-full bg-white/95 backdrop-blur-md border-t border-[#EBE3D7]/80 h-15 flex items-center justify-around shadow-[0_-4px_20px_rgba(0,0,0,0.03)] select-none z-40 shrink-0">
+    <div className="w-full bg-white/95 backdrop-blur-md border-t border-[#EBE3D7]/80 min-h-[58px] pb-[env(safe-area-inset-bottom,0px)] flex items-center justify-around shadow-[0_-4px_20px_rgba(0,0,0,0.03)] select-none z-40 shrink-0">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         return (

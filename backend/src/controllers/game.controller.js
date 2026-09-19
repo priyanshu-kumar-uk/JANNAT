@@ -13,6 +13,9 @@ export const getCurrentGame = async (req, res) => {
     if (!state) {
       await gameService.initActiveGame();
       state = gameService.getCurrentGameState();
+    } else if (state.countdown <= 0 && gameService.currentGame) {
+      await gameService.resolveRound(gameService.currentGame);
+      state = gameService.getCurrentGameState();
     }
 
     res.status(200).json({
@@ -81,10 +84,10 @@ export const placeBet = async (req, res) => {
     const money = Number(contractMoney);
     const qty = Number(quantity);
 
-    if (![10, 100, 1000, 10000].includes(money)) {
+    if (![1, 10, 100, 1000, 10000].includes(money)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid contract money. Allowed values: 10, 100, 1000, 10000.',
+        message: 'Invalid contract money. Allowed values: 1, 10, 100, 1000, 10000.',
       });
     }
 

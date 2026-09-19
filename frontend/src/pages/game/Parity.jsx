@@ -14,7 +14,6 @@ const getResultType = (num) => {
 
 const Parity = () => {
   const navigate = useNavigate();
-  const prevPeriodRef = useRef(null);
 
   const {
     user,
@@ -63,7 +62,11 @@ const Parity = () => {
     handleSetShowMoreModal,
     handleSelectOrderDetail,
     handleCountdownTick,
+    handleDecrementCountdown,
   } = useParity();
+
+  const prevPeriodRef = useRef(null);
+  const resolvedPeriodRef = useRef(null);
 
   const formatOrderTime = (dateStr) => {
     if (!dateStr) return '--';
@@ -96,42 +99,50 @@ const Parity = () => {
   }, [handleFetchCurrentGame, handleFetchHistory, handleFetchMyBets, handleCheckUnseenResults, isAuthenticated]);
 
   /**
-   * Smooth 1-second countdown ticker synchronized with backend endTime
+   * Smooth 1-second countdown ticker
    */
   useEffect(() => {
     const interval = setInterval(() => {
-      if (!endTime) return;
-
-      const remainingMs = new Date(endTime).getTime() - Date.now();
-      const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
-
-      handleCountdownTick(remainingSec);
-
-      // When countdown expires (round finishes)
-      if (remainingSec === 0) {
-        // Wait 1.2s for backend settlement, then re-fetch
-        setTimeout(() => {
-          handleFetchCurrentGame();
-          handleFetchHistory();
-          if (isAuthenticated) {
-            handleFetchMyBets();
-            handleCheckUnseenResults();
-            handleFetchOrdersList(ordersPage, ordersFilter);
-          }
-        }, 1200);
-      }
+      handleDecrementCountdown();
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [endTime, handleCountdownTick, handleFetchCurrentGame, handleFetchHistory, handleFetchMyBets, handleCheckUnseenResults, handleFetchOrdersList, isAuthenticated, ordersPage, ordersFilter]);
+  }, [handleDecrementCountdown]);
 
   /**
-   * Background sync heartbeat every 6 seconds to avoid time drift
+   * When countdown reaches 0, trigger period resolution and data reload
+   */
+  useEffect(() => {
+    if (countdown === 0 && period) {
+      if (resolvedPeriodRef.current !== period) {
+        resolvedPeriodRef.current = period;
+        
+        handleFetchCurrentGame();
+        handleFetchHistory();
+        if (isAuthenticated) {
+          handleFetchMyBets();
+          handleCheckUnseenResults();
+          handleFetchOrdersList(ordersPage, ordersFilter);
+        }
+
+        setTimeout(() => {
+          handleFetchCurrentGame();
+        }, 1200);
+
+        setTimeout(() => {
+          handleFetchCurrentGame();
+        }, 2500);
+      }
+    }
+  }, [countdown, period, isAuthenticated, handleFetchCurrentGame, handleFetchHistory, handleFetchMyBets, handleCheckUnseenResults, handleFetchOrdersList, ordersPage, ordersFilter]);
+
+  /**
+   * Background sync heartbeat every 3 seconds to avoid time drift
    */
   useEffect(() => {
     const heartbeat = setInterval(() => {
       handleFetchCurrentGame();
-    }, 6000);
+    }, 3000);
     return () => clearInterval(heartbeat);
   }, [handleFetchCurrentGame]);
 
@@ -151,8 +162,9 @@ const Parity = () => {
   }, [period, handleFetchHistory, handleFetchMyBets, handleCheckUnseenResults, handleFetchOrdersList, isAuthenticated, ordersPage, ordersFilter]);
 
   // Format countdown into digits: MM:SS
-  const minutes = String(Math.floor(countdown / 60)).padStart(2, '0');
-  const seconds = String(countdown % 60).padStart(2, '0');
+  const safeCountdown = typeof countdown === 'number' && !isNaN(countdown) ? Math.max(0, countdown) : 0;
+  const minutes = String(Math.floor(safeCountdown / 60)).padStart(2, '0');
+  const seconds = String(safeCountdown % 60).padStart(2, '0');
 
   // Compute probability statistics from live history
   const probStats = useMemo(() => {
@@ -963,8 +975,8 @@ const Parity = () => {
             {/* Contract Money Buttons */}
             <div className="flex flex-col mb-3">
               <span className="text-xs font-semibold text-gray-600 mb-1.5">Contract Money</span>
-              <div className="grid grid-cols-4 gap-2">
-                {[10, 100, 1000, 10000].map((amt) => (
+              <div className="grid grid-cols-5 gap-1.5">
+                {[1, 10, 100, 1000, 10000].map((amt) => (
                   <button
                     key={amt}
                     onClick={() => handleSetContractMoney(amt)}
@@ -1027,6 +1039,28 @@ const Parity = () => {
               <span className="text-gray-500">Total Bet Amount:</span>
               <span className="font-extrabold text-base text-gray-900">₹{contractMoney * quantity}</span>
             </div>
+
+            {/* Insufficient Balance Notice Card */}
+            {((user ? Number(user.walletBalance || 0) : 0) < (contractMoney * quantity)) && (
+              <div className="mb-3 p-3 bg-white border border-red-100 rounded-xl flex items-center justify-between gap-2 shadow-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-red-50 flex items-center justify-center text-red-500 font-bold text-xs shrink-0">
+                    !
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-800 text-xs leading-tight">Insufficient Balance</p>
+                    <p className="text-[11px] text-gray-500 leading-tight mt-0.5">Please add money to place this bet</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate('/recharge')}
+                  className="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs rounded-lg transition-all cursor-pointer shadow-xs shrink-0"
+                >
+                  + Add Money
+                </button>
+              </div>
+            )}
 
             {/* Agreement Checkbox */}
             <label className="flex items-center gap-2 mb-4 cursor-pointer text-xs text-gray-600 select-none">

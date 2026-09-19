@@ -50,6 +50,12 @@ const paritySlice = createSlice({
         state.isLocked = isLocked;
       }
     },
+    decrementCountdown: (state) => {
+      const current = typeof state.countdown === 'number' ? state.countdown : 30;
+      const next = Math.max(0, current - 1);
+      state.countdown = next;
+      state.isLocked = next <= 5;
+    },
     setHistory: (state, action) => {
       state.history = action.payload;
     },
@@ -130,6 +136,7 @@ const paritySlice = createSlice({
 export const {
   setCurrentGame,
   setCountdown,
+  decrementCountdown,
   setHistory,
   setActiveTab,
   setMyBets,

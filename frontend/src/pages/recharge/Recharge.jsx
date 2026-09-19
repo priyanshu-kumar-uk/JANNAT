@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   ChevronLeft,
@@ -56,12 +57,12 @@ const AmazonPayIcon = () => (
   </div>
 );
 
-const PRESET_AMOUNTS = [30, 250, 700, 3500, 10000, 50000];
+const PRESET_AMOUNTS = [100, 250, 700, 3500, 10000, 50000];
 
 const INITIAL_RECORDS = [
   {
     id: 'RC99812401',
-    amount: 65,
+    amount: 100,
     method: 'PhonePe',
     status: 'Success',
     date: 'Today, 12:42 PM',
@@ -76,6 +77,7 @@ const INITIAL_RECORDS = [
 ];
 
 const Recharge = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
 
@@ -83,7 +85,7 @@ const Recharge = () => {
   const [view, setView] = useState('amount');
 
   // Form State
-  const [amount, setAmount] = useState('65');
+  const [amount, setAmount] = useState('100');
   const [paymentTab, setPaymentTab] = useState('upi'); // 'upi' | 'qr'
   const [paymentMethod, setPaymentMethod] = useState('gpay'); // 'gpay' | 'paytm' | 'phonepe' | 'amazonpay'
 
@@ -137,8 +139,8 @@ const Recharge = () => {
       showToast('Please enter a valid recharge amount');
       return;
     }
-    if (num < 20) {
-      showToast('Minimum recharge amount is ₹20');
+    if (num < 100) {
+      showToast('Minimum recharge amount is ₹100');
       return;
     }
     setView('payment');
@@ -232,17 +234,29 @@ const Recharge = () => {
       {view === 'amount' && (
         <div className="w-full flex flex-col">
           {/* Top Bar / Header */}
-          <header className="w-full bg-white px-4 py-3 border-b border-gray-100 flex items-center justify-between sticky top-0 z-20 shadow-2xs">
-            <button
-              onClick={() => setShowRecordsModal(true)}
-              className="text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors cursor-pointer active:scale-95"
-            >
-              Records
-            </button>
+          <header className="w-full bg-white px-3 py-3 border-b border-gray-100 flex items-center justify-between sticky top-0 z-20 shadow-2xs">
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => navigate('/')}
+                className="w-8 h-8 -ml-1 rounded-full flex items-center justify-center text-gray-700 hover:text-black hover:bg-gray-100 active:scale-90 transition-all cursor-pointer"
+                title="Back to Home"
+                aria-label="Back to Home"
+              >
+                <ChevronLeft size={22} strokeWidth={2.5} />
+              </button>
+              <button
+                onClick={() => setShowRecordsModal(true)}
+                className="text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors cursor-pointer active:scale-95 px-1 py-1"
+              >
+                Records
+              </button>
+            </div>
+
             <h1 className="text-base font-bold text-gray-900 tracking-tight">Recharge</h1>
+
             <button
               onClick={() => setShowHelpModal(true)}
-              className="text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors cursor-pointer active:scale-95"
+              className="text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors cursor-pointer active:scale-95 px-2 py-1"
             >
               Help
             </button>

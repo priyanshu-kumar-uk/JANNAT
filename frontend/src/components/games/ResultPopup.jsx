@@ -61,8 +61,8 @@ const ResultPopup = ({
         {/* ================= TOP FLOATING DECORATIONS ================= */}
 
         {/* Floating Sparkle Star Left */}
-        <div className="absolute -top-11 left-6 z-30 pointer-events-none">
-          <svg viewBox="0 0 40 40" className="w-9 h-9 drop-shadow-[0_0_10px_rgba(255,215,0,0.85)]">
+        <div className="absolute -top-15 left-5 z-30 pointer-events-none">
+          <svg viewBox="0 0 40 40" className="w-8 h-8 drop-shadow-[0_0_10px_rgba(255,215,0,0.85)]">
             <defs>
               <radialGradient id="starGlowL" cx="50%" cy="50%" r="50%">
                 <stop offset="0%" stopColor="#FFFDE7" />
@@ -80,8 +80,8 @@ const ResultPopup = ({
         </div>
 
         {/* Floating Sparkle Star Right */}
-        <div className="absolute -top-7 right-12 z-30 pointer-events-none">
-          <svg viewBox="0 0 40 40" className="w-8 h-8 drop-shadow-[0_0_10px_rgba(255,215,0,0.85)]">
+        <div className="absolute -top-12 right-9 z-30 pointer-events-none">
+          <svg viewBox="0 0 40 40" className="w-7 h-7 drop-shadow-[0_0_10px_rgba(255,215,0,0.85)]">
             <defs>
               <radialGradient id="starGlowR" cx="50%" cy="50%" r="50%">
                 <stop offset="0%" stopColor="#FFFDE7" />
@@ -98,8 +98,8 @@ const ResultPopup = ({
         </div>
 
         {/* Golden Crown on Top Center */}
-        <div className="absolute -top-10 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
-          <svg viewBox="0 0 120 80" className="w-28 h-20 drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]">
+        <div className="absolute -top-14 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+          <svg viewBox="0 0 120 80" className="w-26 h-18 drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]">
             <defs>
               <linearGradient id="crownGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#FFF59D" />
@@ -252,9 +252,9 @@ const ResultPopup = ({
         {/* ================= MAIN WHITE MODAL CARD ================= */}
         <div className="bg-white rounded-[20px] shadow-[0_12px_40px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col relative z-20">
           
-          {/* Header Banner ("WIN") */}
+          {/* Header Banner ("WIN" / "LOSE") */}
           <div
-            className={`w-full pt-4 pb-3.5 px-4 flex items-center justify-center relative overflow-hidden ${
+            className={`w-full pt-5 pb-3.5 px-4 flex items-center justify-center relative overflow-hidden ${
               isWin
                 ? 'bg-gradient-to-r from-[#ff823d] via-[#ff6133] to-[#ff4a3d]'
                 : 'bg-gradient-to-r from-[#64748b] to-[#475569]'
