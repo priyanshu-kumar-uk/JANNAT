@@ -144,10 +144,10 @@ export const rechargeWallet = async (req, res) => {
     const { amount, channel = 'UPI-Fast' } = req.body;
     const numAmount = Number(amount);
 
-    if (isNaN(numAmount) || numAmount < 20) {
+    if (isNaN(numAmount) || numAmount < 100) {
       return res.status(400).json({
         success: false,
-        message: 'Minimum recharge amount is ₹20',
+        message: 'Minimum recharge amount is ₹100',
       });
     }
 

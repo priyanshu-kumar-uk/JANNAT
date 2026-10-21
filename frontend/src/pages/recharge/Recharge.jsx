@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   ChevronLeft,
@@ -56,12 +57,12 @@ const AmazonPayIcon = () => (
   </div>
 );
 
-const PRESET_AMOUNTS = [30, 250, 700, 3500, 10000, 50000];
+const PRESET_AMOUNTS = [100, 250, 700, 3500, 10000, 50000];
 
 const INITIAL_RECORDS = [
   {
     id: 'RC99812401',
-    amount: 65,
+    amount: 100,
     method: 'PhonePe',
     status: 'Success',
     date: 'Today, 12:42 PM',
@@ -76,6 +77,7 @@ const INITIAL_RECORDS = [
 ];
 
 const Recharge = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
 
@@ -83,7 +85,7 @@ const Recharge = () => {
   const [view, setView] = useState('amount');
 
   // Form State
-  const [amount, setAmount] = useState('65');
+  const [amount, setAmount] = useState('100');
   const [paymentTab, setPaymentTab] = useState('upi'); // 'upi' | 'qr'
   const [paymentMethod, setPaymentMethod] = useState('gpay'); // 'gpay' | 'paytm' | 'phonepe' | 'amazonpay'
 
@@ -134,8 +136,8 @@ const Recharge = () => {
       showToast('Please enter a valid recharge amount');
       return;
     }
-    if (num < 20) {
-      showToast('Minimum recharge amount is ₹20');
+    if (num < 100) {
+      showToast('Minimum recharge amount is ₹100');
       return;
     }
     setView('payment');

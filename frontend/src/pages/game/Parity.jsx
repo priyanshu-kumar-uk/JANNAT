@@ -14,7 +14,6 @@ const getResultType = (num) => {
 
 const Parity = () => {
   const navigate = useNavigate();
-  const prevPeriodRef = useRef(null);
 
   const {
     user,
@@ -63,7 +62,11 @@ const Parity = () => {
     handleSetShowMoreModal,
     handleSelectOrderDetail,
     handleCountdownTick,
+    handleDecrementCountdown,
   } = useParity();
+
+  const prevPeriodRef = useRef(null);
+  const resolvedPeriodRef = useRef(null);
 
   const formatOrderTime = (dateStr) => {
     if (!dateStr) return '--';

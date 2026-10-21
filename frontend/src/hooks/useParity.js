@@ -13,6 +13,7 @@ import { getMeUser, updateWalletBalance } from '../store/slices/authSlice';
 import {
   setCurrentGame,
   setCountdown,
+  decrementCountdown,
   setHistory,
   setActiveTab,
   setMyBets,
@@ -87,7 +88,19 @@ const useParity = () => {
     try {
       const res = await getCurrentGameApi();
       if (res.success && res.game) {
-        const rem = Math.max(0, Math.ceil((new Date(res.game.endTime).getTime() - Date.now()) / 1000));
+        const serverNow = res.game.serverTime ? new Date(res.game.serverTime).getTime() : Date.now();
+        const clientNow = Date.now();
+        const offset = clientNow - serverNow;
+
+        let rem = typeof res.game.countdown === 'number' ? res.game.countdown : 30;
+        if (res.game.endTime) {
+          const adjustedNow = Date.now() - offset;
+          const calculatedRem = Math.max(0, Math.ceil((new Date(res.game.endTime).getTime() - adjustedNow) / 1000));
+          if (calculatedRem > 0) {
+            rem = calculatedRem;
+          }
+        }
+
         dispatch(
           setCurrentGame({
             period: res.game.period,
@@ -402,6 +415,13 @@ const useParity = () => {
     dispatch(setCountdown({ countdown: remSec, isLocked: remSec <= 5 }));
   }, [dispatch]);
 
+  /**
+   * Decrement countdown locally
+   */
+  const handleDecrementCountdown = useCallback(() => {
+    dispatch(decrementCountdown());
+  }, [dispatch]);
+
   return {
     // Redux State
     user,
@@ -453,6 +473,7 @@ const useParity = () => {
     handleSetShowMoreModal,
     handleSelectOrderDetail,
     handleCountdownTick,
+    handleDecrementCountdown,
     handleShowToast,
   };
 };
