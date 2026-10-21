@@ -1,1 +1,111 @@
 @import "tailwindcss";
+
+/* ========================================================================= */
+/* CENTRAL COLOR MANAGEMENT VIA CSS VARIABLES                                */
+/* Edit these variables to customize the entire application theme:          */
+/* 1. --bg-color        : Whole background                                   */
+/* 2. --font-color      : All fonts / typography                             */
+/* 3. --clickable-color : All clickable & interactive parts                  */
+/* ========================================================================= */
+:root {
+  color-scheme: light only;
+
+  /* Three Core Variables */
+  --bg-color: #ffffff;
+  --font-color: #000000;
+  --clickable-color: #63b1fa;
+
+  /* Derived Supporting States */
+  --clickable-hover: #8fc6fd;
+  --clickable-light: #eff6ff;
+  --border-color: #e5e7eb;
+}
+
+@theme {
+  --color-bg-app: var(--bg-color);
+  --color-font-app: var(--font-color);
+  --color-clickable: var(--clickable-color);
+  --color-clickable-hover: var(--clickable-hover);
+  --color-clickable-light: var(--clickable-light);
+  --color-border-app: var(--border-color);
+
+  /* Map standard Tailwind colors to the central variables */
+  --color-blue-600: var(--clickable-color);
+  --color-blue-700: var(--clickable-hover);
+  --color-blue-500: var(--clickable-color);
+  --color-blue-50: var(--clickable-light);
+  --color-blue-100: var(--clickable-light);
+}
+
+/* Base styles bound to CSS variables */
+html,
+body,
+#root {
+  background-color: var(--bg-color) !important;
+  color: var(--font-color) !important;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Force global utility bindings to central CSS variables */
+.bg-white {
+  background-color: var(--bg-color) !important;
+}
+
+.text-black {
+  color: var(--font-color) !important;
+}
+
+.text-blue-600 {
+  color: var(--clickable-color) !important;
+}
+
+.bg-blue-600 {
+  background-color: var(--clickable-color) !important;
+}
+
+.bg-blue-700 {
+  background-color: var(--clickable-hover) !important;
+}
+
+.border-blue-600 {
+  border-color: var(--clickable-color) !important;
+}
+
+.bg-blue-50 {
+  background-color: var(--clickable-light) !important;
+}
+
+.border-gray-100,
+.border-gray-200,
+.border-gray-300 {
+  border-color: var(--border-color) !important;
+}
+
+/* Hide scrollbars globally across all browsers while preserving scrollability */
+*,
+*::before,
+*::after,
+html,
+body,
+div,
+main,
+section,
+article,
+aside,
+nav {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE/Edge */
+}
+
+*::-webkit-scrollbar,
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+div::-webkit-scrollbar,
+main::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}

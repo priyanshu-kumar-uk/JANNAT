@@ -51,7 +51,7 @@ const BottomNav = ({ onAuthRequired, onOpenProfile }) => {
           <Home
             size={20}
             className={`transition-transform duration-200 ${
-              isActive ? 'text-[#8B3A13] scale-110 stroke-[2.5]' : 'text-[#8C7A6F] stroke-[1.8]'
+              isActive ? 'text-blue-600 scale-110 stroke-[2.5]' : 'text-gray-400 stroke-[1.8]'
             }`}
           />
         </div>
@@ -65,7 +65,7 @@ const BottomNav = ({ onAuthRequired, onOpenProfile }) => {
           <Users
             size={20}
             className={`transition-transform duration-200 ${
-              isActive ? 'text-[#8B3A13] scale-110 stroke-[2.5]' : 'text-[#8C7A6F] stroke-[1.8]'
+              isActive ? 'text-blue-600 scale-110 stroke-[2.5]' : 'text-gray-400 stroke-[1.8]'
             }`}
           />
         </div>
@@ -79,8 +79,8 @@ const BottomNav = ({ onAuthRequired, onOpenProfile }) => {
           <div
             className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-transform duration-200 ${
               isActive
-                ? 'border-[#0088ff] text-[#0088ff] scale-110'
-                : 'border-[#8C7A6F] text-[#8C7A6F]'
+                ? 'border-blue-600 text-blue-600 scale-110'
+                : 'border-gray-400 text-gray-400'
             }`}
           >
             <span className="text-[10px] font-black leading-none">₹</span>
@@ -96,7 +96,7 @@ const BottomNav = ({ onAuthRequired, onOpenProfile }) => {
           <User
             size={20}
             className={`transition-transform duration-200 ${
-              isActive ? 'text-[#8B3A13] scale-110 stroke-[2.5]' : 'text-[#8C7A6F] stroke-[1.8]'
+              isActive ? 'text-blue-600 scale-110 stroke-[2.5]' : 'text-gray-400 stroke-[1.8]'
             }`}
           />
         </div>
@@ -105,7 +105,7 @@ const BottomNav = ({ onAuthRequired, onOpenProfile }) => {
   ];
 
   return (
-    <div className="w-full bg-white/95 backdrop-blur-md border-t border-[#EBE3D7]/80 h-15 flex items-center justify-around shadow-[0_-4px_20px_rgba(0,0,0,0.03)] select-none z-40 shrink-0">
+    <div className="w-full bg-white border-t border-gray-200 h-15 flex items-center justify-around shadow-[0_-4px_20px_rgba(0,0,0,0.03)] select-none z-40 shrink-0">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         return (
@@ -116,13 +116,7 @@ const BottomNav = ({ onAuthRequired, onOpenProfile }) => {
           >
             {/* Active Pill Glow */}
             {isActive && (
-              <span
-                className={`absolute top-0 w-8 h-0.5 rounded-full ${
-                  tab.id === 'recharge'
-                    ? 'bg-[#0088ff] shadow-[0_2px_8px_#0088ff]'
-                    : 'bg-[#8B3A13] shadow-[0_2px_8px_#8B3A13]'
-                }`}
-              />
+              <span className="absolute top-0 w-8 h-0.5 rounded-full bg-blue-600 shadow-[0_2px_8px_rgba(37,99,235,0.5)]" />
             )}
 
             {tab.icon(isActive)}
@@ -130,10 +124,8 @@ const BottomNav = ({ onAuthRequired, onOpenProfile }) => {
             <span
               className={`text-[11px] mt-1 tracking-tight transition-all duration-150 ${
                 isActive
-                  ? tab.id === 'recharge'
-                    ? 'text-[#0088ff] font-bold'
-                    : 'text-[#8B3A13] font-bold'
-                  : 'text-[#8C7A6F] font-medium group-hover:text-[#4A382F]'
+                  ? 'text-blue-600 font-bold'
+                  : 'text-gray-400 font-medium group-hover:text-black'
               }`}
             >
               {tab.label}

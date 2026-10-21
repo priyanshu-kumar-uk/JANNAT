@@ -49,7 +49,6 @@ const Home = () => {
   // Show Auth popup automatically on initial page visit if not authenticated
   useEffect(() => {
     if (isInitialized && !isAuthenticated) {
-      // Small timeout for smooth entry animation
       const timer = setTimeout(() => {
         setShowAuthModal(true);
         setAuthModalReason('Join Jannat to play thrilling games & win real cash rewards!');
@@ -102,35 +101,31 @@ const Home = () => {
   const displayName = isAuthenticated ? (user?.fullName || 'Jannat Player') : 'Guest';
 
   return (
-    <div className="w-full min-h-full bg-[#FAF8F5] flex flex-col font-sans select-none pb-18 relative">
-      
+    <div className="w-full min-h-full bg-white flex flex-col font-sans select-none pb-20 relative text-black">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 bg-[#1A110B]/95 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.25)] border border-amber-500/30 flex items-center gap-2 backdrop-blur-md animate-bounce">
-          <Sparkles size={14} className="text-amber-400" />
+        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 bg-black text-white text-xs font-semibold px-4 py-2 rounded-full shadow-lg border border-gray-800 flex items-center gap-2">
+          <Sparkles size={14} className="text-blue-400" />
           <span>{toastMessage}</span>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 1. AUTHENTICATION REQUIRED MODAL (POPUP ON FIRST VISIT / INTERACTION)     */}
+      {/* 1. AUTHENTICATION REQUIRED MODAL                                          */}
       {/* ========================================================================= */}
       {showAuthModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.3)] border border-[#EBE3D7] animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl border border-gray-200">
             {/* Modal Top Banner */}
-            <div className="relative bg-gradient-to-br from-[#1C120C] via-[#2D1B13] to-[#8B3A13] p-5 text-center text-white overflow-hidden">
-              {/* Background Glow */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/20 rounded-full blur-2xl pointer-events-none" />
-              
+            <div className="relative bg-white border-b border-gray-100 p-5 text-center text-black">
               <button
                 onClick={() => setShowAuthModal(false)}
-                className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/80 hover:text-white transition-colors cursor-pointer"
+                className="absolute top-3 right-3 w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-black transition-colors cursor-pointer"
               >
                 <X size={15} />
               </button>
 
-              <div className="w-14 h-14 mx-auto rounded-2xl bg-[#FAF6F0] p-1.5 shadow-lg border border-amber-400/40 mb-2.5 flex items-center justify-center">
+              <div className="w-14 h-14 mx-auto rounded-2xl bg-white p-1.5 shadow-sm border border-gray-200 mb-2.5 flex items-center justify-center">
                 <img
                   src="/logo/Jannat-Logo.png"
                   alt="Jannat Logo"
@@ -138,26 +133,26 @@ const Home = () => {
                 />
               </div>
 
-              <h2 className="text-lg font-bold tracking-tight text-amber-100 font-serif">
+              <h2 className="text-lg font-bold tracking-tight text-black">
                 Welcome to Jannat
               </h2>
-              <p className="text-[11px] text-[#D8C7B8] mt-1 max-w-[240px] mx-auto leading-relaxed">
+              <p className="text-[12px] text-gray-600 mt-1 max-w-[240px] mx-auto leading-relaxed">
                 {authModalReason || 'Login or Create Account to start playing & withdraw instantly.'}
               </p>
             </div>
 
             {/* Modal Actions */}
-            <div className="p-4 space-y-2.5">
+            <div className="p-4 space-y-2.5 bg-white">
               {/* Login Button */}
               <button
                 onClick={() => {
                   setShowAuthModal(false);
                   navigate('/login');
                 }}
-                className="w-full py-2.5 px-4 bg-[#8B3A13] hover:bg-[#742E0E] text-white text-xs font-bold rounded-xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer group active:scale-[0.98]"
+                className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.98]"
               >
                 <span>Login to Account</span>
-                <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                <ArrowRight size={14} />
               </button>
 
               {/* Register Button */}
@@ -166,16 +161,16 @@ const Home = () => {
                   setShowAuthModal(false);
                   navigate('/register');
                 }}
-                className="w-full py-2.5 px-4 bg-[#FAF6F0] hover:bg-[#F2ECE2] text-[#8B3A13] border border-[#E2D8CC] text-xs font-bold rounded-xl shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.98]"
+                className="w-full py-2.5 px-4 bg-white hover:bg-gray-50 text-blue-600 border border-blue-600 text-xs font-bold rounded-xl shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.98]"
               >
-                <Gift size={14} className="text-[#8B3A13]" />
+                <Gift size={14} />
                 <span>Create New Account</span>
               </button>
 
               {/* Browse as guest */}
               <button
                 onClick={() => setShowAuthModal(false)}
-                className="w-full py-1.5 text-center text-[11px] font-semibold text-[#8C7A6F] hover:text-[#4A382F] transition-colors cursor-pointer"
+                className="w-full py-1.5 text-center text-[11px] font-semibold text-gray-500 hover:text-black transition-colors cursor-pointer"
               >
                 Continue Previewing Games
               </button>
@@ -188,47 +183,47 @@ const Home = () => {
       {/* 2. USER PROFILE & LOGOUT MODAL                                            */}
       {/* ========================================================================= */}
       {showProfileModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-[#EBE3D7] animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl border border-gray-200">
             {/* Header */}
-            <div className="bg-gradient-to-r from-[#8B3A13] to-[#B34E1E] p-4 text-white flex items-center justify-between">
+            <div className="bg-white border-b border-gray-200 p-4 text-black flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white font-black text-base shadow-sm">
+                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-black text-base shadow-sm">
                   {displayName.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold tracking-tight">{displayName}</h3>
-                  <p className="text-[11px] text-white/80 font-mono">{user?.mobileNumber || 'Member'}</p>
+                  <h3 className="text-sm font-bold tracking-tight text-black">{displayName}</h3>
+                  <p className="text-[11px] text-gray-500 font-mono">{user?.mobileNumber || 'Member'}</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowProfileModal(false)}
-                className="w-8 h-8 rounded-full bg-black/15 hover:bg-black/25 flex items-center justify-center text-white cursor-pointer transition-colors"
+                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-black cursor-pointer transition-colors"
               >
                 <X size={16} />
               </button>
             </div>
 
             {/* Content Details */}
-            <div className="p-4 space-y-3">
-              <div className="bg-[#FAF6F0] p-3.5 rounded-2xl border border-[#EBE3D7] flex items-center justify-between">
+            <div className="p-4 space-y-3 bg-white">
+              <div className="bg-white p-3.5 rounded-xl border border-gray-200 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-amber-500/15 flex items-center justify-center text-[#8B3A13]">
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
                     <Wallet size={16} />
                   </div>
                   <span className="text-xs font-semibold text-gray-700">Wallet Balance</span>
                 </div>
-                <span className="text-sm font-black text-gray-900">₹{displayBalance}</span>
+                <span className="text-sm font-black text-black">₹{displayBalance}</span>
               </div>
 
-              <div className="bg-[#FAF6F0] p-3.5 rounded-2xl border border-[#EBE3D7] flex items-center justify-between">
+              <div className="bg-white p-3.5 rounded-xl border border-gray-200 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-500/15 flex items-center justify-center text-[#00c08b]">
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
                     <ShieldCheck size={16} />
                   </div>
                   <span className="text-xs font-semibold text-gray-700">Account Status</span>
                 </div>
-                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                <span className="text-[11px] font-bold text-black border border-gray-300 px-2 py-0.5 rounded-md uppercase tracking-wider">
                   Active
                 </span>
               </div>
@@ -237,10 +232,10 @@ const Home = () => {
               <button
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="w-full mt-2 py-2.5 px-4 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+                className="w-full mt-2 py-2.5 px-4 bg-white hover:bg-gray-50 text-black border border-gray-300 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
               >
                 {isLoggingOut ? (
-                  <div className="w-4 h-4 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                 ) : (
                   <>
                     <LogOut size={15} />
@@ -256,19 +251,19 @@ const Home = () => {
       {/* ========================================================================= */}
       {/* 3. FIXED TOP NAVBAR & LIVE WINNER TICKER                                 */}
       {/* ========================================================================= */}
-      <header className="sticky top-0 z-30 w-full bg-white/95 backdrop-blur-md border-b border-[#EBE3D7] shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+      <header className="sticky top-0 z-30 w-full bg-white border-b border-gray-200 shadow-xs">
         {/* Brand & Auth Status Bar */}
-        <div className="w-full px-3.5 py-2 flex items-center justify-between">
+        <div className="w-full px-3.5 py-2.5 flex items-center justify-between">
           {/* Left Brand */}
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-xl bg-[#FAF6F0] border border-[#EBE3D7] p-0.5 shadow-xs flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-white border border-gray-200 p-0.5 shadow-xs flex items-center justify-center">
               <img
                 src="/logo/Jannat-Logo.png"
                 alt="Jannat Logo"
                 className="w-full h-full object-contain"
               />
             </div>
-            <span className="text-sm font-black tracking-tight text-[#2B1B14] font-serif uppercase">
+            <span className="text-sm font-black tracking-tight text-black uppercase">
               Jannat
             </span>
           </div>
@@ -278,9 +273,9 @@ const Home = () => {
             {isAuthenticated ? (
               <button
                 onClick={() => navigate('/account')}
-                className="flex items-center gap-1.5 bg-[#FAF6F0] hover:bg-[#F2ECE2] border border-[#E2D8CC] px-2.5 py-1 rounded-full text-xs font-semibold text-[#4A382F] transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 bg-white hover:bg-gray-50 border border-gray-300 px-2.5 py-1 rounded-full text-xs font-semibold text-black transition-colors cursor-pointer"
               >
-                <div className="w-4 h-4 rounded-full bg-[#8B3A13] text-white text-[9px] font-bold flex items-center justify-center">
+                <div className="w-4 h-4 rounded-full bg-blue-600 text-white text-[9px] font-bold flex items-center justify-center">
                   {displayName.charAt(0).toUpperCase()}
                 </div>
                 <span className="max-w-[75px] truncate">{displayName}</span>
@@ -289,13 +284,13 @@ const Home = () => {
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => navigate('/login')}
-                  className="px-2.5 py-1 text-xs font-bold text-[#8B3A13] hover:text-[#6E2C0D] transition-colors cursor-pointer"
+                  className="px-2.5 py-1 text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
                 >
                   Login
                 </button>
                 <button
                   onClick={() => navigate('/register')}
-                  className="px-3 py-1 bg-[#8B3A13] hover:bg-[#742E0E] text-white text-xs font-bold rounded-full shadow-xs transition-colors cursor-pointer"
+                  className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-full shadow-xs transition-colors cursor-pointer"
                 >
                   Register
                 </button>
@@ -307,23 +302,23 @@ const Home = () => {
         {/* Live Winner Ticker Bar */}
         <div
           onClick={() => handleGuardedAction('Live Winners Feed')}
-          className="w-full px-3.5 py-1.5 flex items-center justify-between bg-gradient-to-r from-[#FFF9F2] via-[#FFF3E6] to-[#FFF9F2] border-t border-[#F2ECE2] cursor-pointer"
+          className="w-full px-3.5 py-1.5 flex items-center justify-between bg-white border-t border-gray-100 cursor-pointer"
         >
           <div className="flex items-center gap-2 overflow-hidden flex-1 mr-2">
             <span className="flex h-2 w-2 relative shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
             </span>
 
-            <div className="text-[11px] text-[#6B5A4E] truncate tracking-tight">
-              <span className="font-bold text-[#2B1B14]">{currentWinner.user}</span>
-              <span className="mx-1 text-[#8C7A6F]">won</span>
-              <span className="text-emerald-600 font-black">{currentWinner.amount}</span>
-              <span className="ml-1 text-[#8C7A6F]">in {currentWinner.game}</span>
+            <div className="text-[11px] text-gray-600 truncate tracking-tight">
+              <span className="font-bold text-black">{currentWinner.user}</span>
+              <span className="mx-1 text-gray-500">won</span>
+              <span className="text-black font-black">{currentWinner.amount}</span>
+              <span className="ml-1 text-gray-500">in {currentWinner.game}</span>
             </div>
           </div>
 
-          <div className="flex items-center text-[10px] font-bold text-[#8B3A13] shrink-0 gap-0.5">
+          <div className="flex items-center text-[10px] font-bold text-blue-600 shrink-0 gap-0.5">
             <span>LIVE</span>
             <TrendingUp size={11} />
           </div>
@@ -331,35 +326,32 @@ const Home = () => {
       </header>
 
       {/* ========================================================================= */}
-      {/* 4. PREMIUM HERO WALLET / BALANCE CARD                                     */}
+      {/* 4. WALLET / BALANCE CARD                                                  */}
       {/* ========================================================================= */}
       <div className="w-full px-3.5 pt-3">
-        <div className="w-full rounded-2xl bg-gradient-to-br from-[#1F140D] via-[#2B1C13] to-[#45271A] p-4 text-white shadow-[0_10px_25px_rgba(0,0,0,0.12)] border border-[#5A3828]/50 relative overflow-hidden">
-          {/* Subtle Ambient Glow */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
-          
+        <div className="w-full rounded-2xl bg-white p-4 text-black shadow-sm border border-gray-200">
           <div className="flex items-center justify-between">
             {/* Left Balance Display */}
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-[#D8C7B8] text-[11px] font-semibold tracking-wider uppercase">
+                <span className="text-gray-500 text-[11px] font-semibold tracking-wider uppercase">
                   Available Points
                 </span>
                 {!isAuthenticated && (
-                  <span className="text-[9px] bg-amber-500/20 text-amber-300 font-semibold px-1.5 py-0.2 rounded">
+                  <span className="text-[9px] bg-gray-100 text-black font-semibold px-1.5 py-0.2 rounded border border-gray-200">
                     Demo
                   </span>
                 )}
               </div>
 
               <div className="flex items-baseline mt-1">
-                <span className="text-2xl font-black text-white tracking-tight leading-none">
+                <span className="text-2xl font-black text-black tracking-tight leading-none">
                   ₹{displayBalance}
                 </span>
-                <span className="text-[11px] font-bold text-[#D8C7B8] ml-1.5">INR</span>
+                <span className="text-[11px] font-bold text-gray-500 ml-1.5">INR</span>
               </div>
 
-              <div className="mt-2 flex items-center gap-1.5 text-[10px] text-[#A8988C] font-mono">
+              <div className="mt-2 flex items-center gap-1.5 text-[10px] text-gray-500 font-mono">
                 <span>ID: {displayId}</span>
               </div>
             </div>
@@ -368,13 +360,13 @@ const Home = () => {
             <div className="flex flex-col gap-2 shrink-0">
               <button
                 onClick={() => handleGuardedAction('Recharge', () => navigate('/recharge'))}
-                className="w-26 py-1.5 bg-gradient-to-r from-[#2196f3] to-[#00b0ff] text-white text-xs font-bold rounded-full shadow-md shadow-blue-500/25 active:scale-95 transition-transform cursor-pointer text-center"
+                className="w-24 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-full shadow-sm active:scale-95 transition-transform cursor-pointer text-center"
               >
                 Recharge
               </button>
               <button
                 onClick={() => handleGuardedAction('Withdraw', () => navigate('/account'))}
-                className="w-26 py-1.5 bg-white/15 hover:bg-white/20 border border-white/20 text-white text-xs font-bold rounded-full active:scale-95 transition-transform cursor-pointer text-center"
+                className="w-24 py-1.5 bg-white hover:bg-gray-50 border border-blue-600 text-blue-600 text-xs font-bold rounded-full active:scale-95 transition-transform cursor-pointer text-center"
               >
                 Withdraw
               </button>
@@ -384,187 +376,136 @@ const Home = () => {
       </div>
 
       {/* ========================================================================= */}
-      {/* 5. QUICK ACTION CARDS (TASK REWARD & DAILY CHECK-IN)                      */}
+      {/* 5. QUICK ACTION CARDS                                                     */}
       {/* ========================================================================= */}
       <div className="w-full px-3.5 py-3 grid grid-cols-2 gap-2.5">
         {/* Task Reward */}
         <div
           onClick={() => handleGuardedAction('Task Rewards')}
-          className="bg-white rounded-2xl p-2.5 border border-[#EBE3D7] shadow-xs flex items-center justify-between cursor-pointer active:scale-[0.98] transition-all hover:border-[#8B3A13]/40 group"
+          className="bg-white rounded-2xl p-2.5 border border-gray-200 shadow-xs flex items-center justify-between cursor-pointer active:scale-[0.98] transition-all hover:border-blue-600 group"
         >
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform">
               <Gift size={18} />
             </div>
             <div>
-              <h4 className="text-xs font-bold text-[#2B1B14]">Task Reward</h4>
-              <p className="text-[10px] text-[#8C7A6F]">Get ₹100+ Free</p>
+              <h4 className="text-xs font-bold text-black">Task Reward</h4>
+              <p className="text-[10px] text-gray-500">Get ₹100+ Free</p>
             </div>
           </div>
-          {!isAuthenticated && <Lock size={12} className="text-[#A8988C]" />}
+          {!isAuthenticated && <Lock size={12} className="text-gray-400" />}
         </div>
 
         {/* Daily Check-In */}
         <div
           onClick={() => handleGuardedAction('Daily Check-in')}
-          className="bg-white rounded-2xl p-2.5 border border-[#EBE3D7] shadow-xs flex items-center justify-between cursor-pointer active:scale-[0.98] transition-all hover:border-[#00c08b]/40 group"
+          className="bg-white rounded-2xl p-2.5 border border-gray-200 shadow-xs flex items-center justify-between cursor-pointer active:scale-[0.98] transition-all hover:border-blue-600 group"
         >
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform">
               <CalendarCheck size={18} />
             </div>
             <div>
-              <h4 className="text-xs font-bold text-[#2B1B14]">Check In</h4>
-              <p className="text-[10px] text-[#8C7A6F]">Daily Bonus</p>
+              <h4 className="text-xs font-bold text-black">Check In</h4>
+              <p className="text-[10px] text-gray-500">Daily Bonus</p>
             </div>
           </div>
-          {!isAuthenticated && <Lock size={12} className="text-[#A8988C]" />}
+          {!isAuthenticated && <Lock size={12} className="text-gray-400" />}
         </div>
       </div>
 
       {/* ========================================================================= */}
-      {/* 6. GAME CARDS 2x2 GRID (CLICK INTERCEPTED FOR GUESTS)                     */}
+      {/* 6. GAME CARDS 2x2 GRID                                                    */}
       {/* ========================================================================= */}
       <div className="w-full px-3.5">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5">
-            <Flame size={15} className="text-[#8B3A13]" />
-            <h3 className="text-xs font-bold text-[#2B1B14] uppercase tracking-wider">
+            <Flame size={15} className="text-blue-600" />
+            <h3 className="text-xs font-bold text-black uppercase tracking-wider">
               Popular Games
             </h3>
           </div>
-          <span className="text-[10px] font-semibold text-[#8B3A13]">Instant Payouts</span>
+          <span className="text-[10px] font-semibold text-blue-600">Instant Payouts</span>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           {/* CARD 1: Fast-Parity */}
           <div
             onClick={() => handleGuardedAction('Fast-Parity Game', () => navigate('/parity'))}
-            className="h-[185px] rounded-2xl p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-all duration-150 shadow-md relative overflow-hidden group border border-[#2D1E16] bg-[#0E1520]"
+            className="h-[185px] rounded-2xl p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-all duration-150 shadow-sm relative overflow-hidden group border border-gray-200 bg-white"
           >
             {/* Banner Image */}
             <img
-              src="/banners/Gemini_Generated_Image_d2nzxqd2nzxqd2nz.png"
+              src="https://www.acewin.ink/_astro/fast-parity.Cw4eRbcT_Z591Fh.webp"
               alt="Fast-Parity"
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
-            {/* Contrast Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
 
             {/* Lock Overlay if guest */}
             {!isAuthenticated && (
-              <div className="absolute top-2 right-2 z-20 bg-black/50 backdrop-blur-xs w-6 h-6 rounded-full flex items-center justify-center text-white/90 border border-white/20">
+              <div className="absolute top-2 right-2 z-20 bg-black/60 backdrop-blur-xs w-6 h-6 rounded-full flex items-center justify-center text-white border border-white/20">
                 <Lock size={11} />
               </div>
             )}
 
             {/* Badge */}
-            <div className="relative z-10 self-start px-2 py-0.5 rounded-full bg-black/50 backdrop-blur-xs text-white text-[9px] font-bold tracking-wider uppercase border border-white/20">
+            <div className="relative z-10 self-start px-2 py-0.5 rounded-full bg-blue-600 text-white text-[9px] font-bold tracking-wider uppercase shadow-xs">
               30 Sec
             </div>
 
-            <div className="relative z-10 w-full text-center pb-0.5">
-              <span className="text-white font-black text-base tracking-tight drop-shadow-md">
-                Fast-Parity
-              </span>
-            </div>
           </div>
 
           {/* CARD 2: MineSweeper */}
           <div
             onClick={() => handleGuardedAction('MineSweeper Game')}
-            className="h-[185px] rounded-2xl p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-all duration-150 shadow-md relative overflow-hidden group border border-[#2D1E16] bg-[#1E0D0D]"
+            className="h-[185px] rounded-2xl p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-all duration-150 shadow-sm relative overflow-hidden group border border-gray-200 bg-white"
           >
             {/* Banner Image */}
             <img
-              src="/banners/sweeper.png"
+              src="https://www.acewin.in/assets/mine-sweeper-Co058xQ5.png"
               alt="MineSweeper"
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
-            {/* Contrast Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
-
+    
             {!isAuthenticated && (
-              <div className="absolute top-2 right-2 z-20 bg-black/50 backdrop-blur-xs w-6 h-6 rounded-full flex items-center justify-center text-white/90 border border-white/20">
+              <div className="absolute top-2 right-2 z-20 bg-black/60 backdrop-blur-xs w-6 h-6 rounded-full flex items-center justify-center text-white border border-white/20">
                 <Lock size={11} />
               </div>
             )}
 
-            <div className="relative z-10 self-start px-2 py-0.5 rounded-full bg-black/50 backdrop-blur-xs text-white text-[9px] font-bold tracking-wider uppercase border border-white/20">
+            <div className="relative z-10 self-start px-2 py-0.5 rounded-full bg-blue-600 text-white text-[9px] font-bold tracking-wider uppercase shadow-xs">
               Instant
             </div>
 
-            <div className="relative z-10 w-full text-center pb-0.5">
-              <span className="text-white font-black text-base tracking-tight drop-shadow-md">
-                MineSweeper
-              </span>
-            </div>
-          </div>
-
-          {/* CARD 3: Andar Bahar */}
-          <div
-            onClick={() => handleGuardedAction('Andar Bahar Game')}
-            className="h-[185px] rounded-2xl p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-all duration-150 shadow-md relative overflow-hidden group border border-[#2D1E16] bg-[#1E1208]"
-          >
-            {/* Banner Image */}
-            <img
-              src="/banners/Andar%20bahr.png"
-              alt="Andar Bahar"
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-            {/* Contrast Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
-
-            {!isAuthenticated && (
-              <div className="absolute top-2 right-2 z-20 bg-black/50 backdrop-blur-xs w-6 h-6 rounded-full flex items-center justify-center text-white/90 border border-white/20">
-                <Lock size={11} />
-              </div>
-            )}
-
-            <div className="relative z-10 self-start px-2 py-0.5 rounded-full bg-black/50 backdrop-blur-xs text-white text-[9px] font-bold tracking-wider uppercase border border-white/20">
-              Classic
-            </div>
-
-            <div className="relative z-10 w-full text-center pb-0.5">
-              <span className="text-white font-black text-base tracking-tight drop-shadow-md">
-                Andar Bahar
-              </span>
-            </div>
+  
           </div>
 
           {/* CARD 4: Crash */}
           <div
             onClick={() => handleGuardedAction('Crash Game')}
-            className="h-[185px] rounded-2xl p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-all duration-150 shadow-md relative overflow-hidden group border border-[#2D1E16] bg-[#0A1A14]"
+            className="h-[185px] rounded-2xl p-3 flex flex-col items-center justify-between cursor-pointer active:scale-[0.98] transition-all duration-150 shadow-sm relative overflow-hidden group border border-gray-200 bg-white"
           >
             {/* Banner Image */}
             <img
-              src="/banners/Crash.png"
+              src="https://www.acewin.in/assets/crash-6ein-qaS.png"
               alt="Crash"
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
-            {/* Contrast Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
 
             {!isAuthenticated && (
-              <div className="absolute top-2 right-2 z-20 bg-black/50 backdrop-blur-xs w-6 h-6 rounded-full flex items-center justify-center text-white/90 border border-white/20">
+              <div className="absolute top-2 right-2 z-20 bg-black/60 backdrop-blur-xs w-6 h-6 rounded-full flex items-center justify-center text-white border border-white/20">
                 <Lock size={11} />
               </div>
             )}
 
-            <div className="relative z-10 self-start px-2 py-0.5 rounded-full bg-black/50 backdrop-blur-xs text-white text-[9px] font-bold tracking-wider uppercase border border-white/20">
+            <div className="relative z-10 self-start px-2 py-0.5 rounded-full bg-blue-600 text-white text-[9px] font-bold tracking-wider uppercase shadow-xs">
               100x Multi
             </div>
 
-            <div className="relative z-10 w-full text-center pb-0.5">
-              <span className="text-white font-black text-base tracking-tight drop-shadow-md">
-                Crash
-              </span>
-            </div>
+            
           </div>
         </div>
       </div>
-
     </div>
   );
 };

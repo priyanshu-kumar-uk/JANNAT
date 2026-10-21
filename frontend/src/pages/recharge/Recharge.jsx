@@ -79,7 +79,7 @@ const Recharge = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
 
-  // Flow views: 'amount' (Screen 2) or 'payment' (Screen 3)
+  // Flow views: 'amount' or 'payment'
   const [view, setView] = useState('amount');
 
   // Form State
@@ -121,16 +121,13 @@ const Recharge = () => {
     setTimeout(() => setToastMessage(null), 2500);
   };
 
-  // Balance display helper
-  const walletBalance = user?.walletBalance !== undefined ? user.walletBalance : 47.0;
-  const formattedBalance = walletBalance.toFixed(3);
+  const walletBalance = user?.walletBalance !== undefined ? user.walletBalance : 0.0;
+  const formattedBalance = walletBalance.toFixed(2);
 
-  // Quick Amount preset click
   const handlePresetClick = (val) => {
     setAmount(val.toString());
   };
 
-  // Handle proceed to payment selection
   const handleProceedToPayment = () => {
     const num = Number(amount);
     if (isNaN(num) || num <= 0) {
@@ -144,7 +141,6 @@ const Recharge = () => {
     setView('payment');
   };
 
-  // Payment Confirmation & Balance Credit Simulation / Backend Sync
   const handleConfirmPayment = async () => {
     setIsProcessing(true);
     const creditedAmount = Number(amount) || 65;
@@ -179,10 +175,8 @@ const Recharge = () => {
       const txId = `RC${Math.floor(10000000 + Math.random() * 90000000)}`;
       setLastTxId(txId);
 
-      // Credit wallet in Redux store
       dispatch(updateWalletBalance(creditedAmount));
 
-      // Append record
       const newRecord = {
         id: txId,
         amount: creditedAmount,
@@ -217,32 +211,30 @@ const Recharge = () => {
   };
 
   return (
-    <div className="w-full min-h-full bg-[#FAF8F5] flex flex-col font-sans select-none relative pb-16">
+    <div className="w-full min-h-full bg-white flex flex-col font-sans select-none relative pb-16 text-black">
       {/* Floating Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 bg-[#1A110B]/95 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-lg border border-amber-500/30 flex items-center gap-2 backdrop-blur-md animate-in fade-in zoom-in-95">
-          <Sparkles size={14} className="text-amber-400" />
+        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 bg-black text-white text-xs font-semibold px-4 py-2 rounded-full shadow-lg border border-gray-800 flex items-center gap-2">
+          <Sparkles size={14} className="text-blue-400" />
           <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* SCREEN 2: MAIN RECHARGE AMOUNT SCREEN                                      */}
-      {/* ========================================================================= */}
+      {/* SCREEN 1: MAIN RECHARGE AMOUNT SCREEN */}
       {view === 'amount' && (
         <div className="w-full flex flex-col">
           {/* Top Bar / Header */}
-          <header className="w-full bg-white px-4 py-3 border-b border-gray-100 flex items-center justify-between sticky top-0 z-20 shadow-2xs">
+          <header className="w-full bg-white px-4 py-3 border-b border-gray-200 flex items-center justify-between sticky top-0 z-20">
             <button
               onClick={() => setShowRecordsModal(true)}
-              className="text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors cursor-pointer active:scale-95"
+              className="text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer active:scale-95"
             >
               Records
             </button>
-            <h1 className="text-base font-bold text-gray-900 tracking-tight">Recharge</h1>
+            <h1 className="text-base font-bold text-black tracking-tight">Recharge</h1>
             <button
               onClick={() => setShowHelpModal(true)}
-              className="text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors cursor-pointer active:scale-95"
+              className="text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer active:scale-95"
             >
               Help
             </button>
@@ -250,34 +242,34 @@ const Recharge = () => {
 
           <div className="p-4 space-y-4">
             {/* Balance Card */}
-            <div className="w-full bg-white rounded-2xl p-4 shadow-2xs border border-gray-100 text-center">
-              <span className="text-xs text-gray-400 font-medium">Balance</span>
+            <div className="w-full bg-white rounded-2xl p-4 border border-gray-200 text-center shadow-xs">
+              <span className="text-xs text-gray-500 font-medium">Available Balance</span>
               <div className="mt-1 flex items-baseline justify-center">
-                <span className="text-2xl font-black text-gray-900 tracking-tight">
+                <span className="text-2xl font-black text-black tracking-tight">
                   ₹{formattedBalance}
                 </span>
               </div>
             </div>
 
             {/* Amount Input Box */}
-            <div className="w-full bg-white rounded-2xl p-4 shadow-2xs border border-gray-100">
-              <label className="text-xs text-gray-500 font-medium block mb-2">Amount</label>
+            <div className="w-full bg-white rounded-2xl p-4 border border-gray-200 shadow-xs">
+              <label className="text-xs text-gray-500 font-medium block mb-2">Recharge Amount</label>
 
               {/* Large Input Field */}
-              <div className="flex items-center gap-2 border-b-2 border-gray-100 pb-2 focus-within:border-[#0088ff] transition-colors">
-                <span className="text-2xl font-bold text-gray-900">₹</span>
+              <div className="flex items-center gap-2 border-b-2 border-gray-200 pb-2 focus-within:border-blue-600 transition-colors">
+                <span className="text-2xl font-bold text-black">₹</span>
                 <input
                   type="number"
                   inputMode="numeric"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="Enter amount"
-                  className="w-full text-2xl font-black text-gray-900 bg-transparent outline-hidden tracking-tight"
+                  className="w-full text-2xl font-black text-black bg-transparent outline-none tracking-tight"
                 />
                 {amount && (
                   <button
                     onClick={() => setAmount('')}
-                    className="text-gray-300 hover:text-gray-500 text-sm font-bold p-1 cursor-pointer"
+                    className="text-gray-400 hover:text-black text-sm font-bold p-1 cursor-pointer"
                   >
                     ×
                   </button>
@@ -294,8 +286,8 @@ const Recharge = () => {
                       onClick={() => handlePresetClick(val)}
                       className={`py-2.5 px-2 rounded-xl text-xs font-bold transition-all duration-150 cursor-pointer active:scale-95 text-center ${
                         isSelected
-                          ? 'bg-[#EBF5FF] text-[#0088ff] border border-[#0088ff] shadow-xs'
-                          : 'bg-[#F5F7FA] hover:bg-[#EEF2F6] text-gray-700 border border-transparent'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'bg-white hover:bg-gray-50 text-black border border-gray-200'
                       }`}
                     >
                       ₹{val.toLocaleString()}
@@ -304,84 +296,69 @@ const Recharge = () => {
                 })}
               </div>
 
-              {/* Big Vibrant Recharge Action Button */}
+              {/* Big Recharge Action Button */}
               <button
                 onClick={handleProceedToPayment}
-                className="w-full mt-5 py-3.5 bg-[#0088ff] hover:bg-[#0077ee] text-white text-base font-bold rounded-2xl shadow-md shadow-blue-500/20 active:scale-[0.98] transition-all cursor-pointer text-center"
+                className="w-full mt-5 py-3.5 bg-blue-600 hover:bg-blue-700 text-white text-base font-bold rounded-2xl shadow-sm active:scale-[0.98] transition-all cursor-pointer text-center"
               >
                 Recharge
               </button>
 
               {/* Trust & Safety Badges */}
-              <div className="mt-4 flex items-center justify-center gap-6 text-gray-400 text-xs">
+              <div className="mt-4 flex items-center justify-center gap-6 text-gray-500 text-xs">
                 <div className="flex items-center gap-1">
-                  <ShieldCheck size={16} className="text-gray-400" />
-                  <span className="text-[11px] font-medium text-gray-500">Security</span>
+                  <ShieldCheck size={16} className="text-blue-600" />
+                  <span className="text-[11px] font-medium text-black">100% Secure</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Zap size={16} className="text-gray-400" />
-                  <span className="text-[11px] font-medium text-gray-500">Fast</span>
+                  <Zap size={16} className="text-blue-600" />
+                  <span className="text-[11px] font-medium text-black">Instant Credit</span>
                 </div>
               </div>
             </div>
 
             {/* Live Success Ticker Notice */}
-            <div className="w-full bg-white rounded-xl p-2.5 border border-gray-100 shadow-2xs flex items-center gap-2.5 overflow-hidden">
-              <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs shrink-0">
+            <div className="w-full bg-white rounded-xl p-2.5 border border-gray-200 shadow-xs flex items-center gap-2.5 overflow-hidden">
+              <div className="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0">
                 ₹
               </div>
               <div className="text-xs text-gray-600 truncate">
-                <span className="font-semibold text-gray-900">
+                <span className="font-semibold text-black">
                   {tickerItems[tickerIndex].user}
                 </span>{' '}
-                Successfully recharge{' '}
-                <span className="text-emerald-600 font-bold">
+                recharged{' '}
+                <span className="text-blue-600 font-bold">
                   ₹{tickerItems[tickerIndex].amount}
                 </span>
               </div>
-            </div>
-
-            {/* Jannat Sponsor / Platform Guarantee Badge */}
-            <div className="w-full pt-4 pb-2 flex flex-col items-center justify-center opacity-70">
-              <div className="flex items-center gap-1.5">
-                <div className="w-4 h-4 rounded bg-[#0088ff] flex items-center justify-center text-white text-[9px] font-black">
-                  J
-                </div>
-                <span className="text-xs font-black tracking-wider text-gray-800 uppercase">
-                  JANNAT VERIFIED
-                </span>
-              </div>
-              <p className="text-[10px] text-gray-400 mt-0.5">100% Secure & Encrypted Payments</p>
             </div>
           </div>
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* SCREEN 3: PAYMENT METHOD SELECTION                                         */}
-      {/* ========================================================================= */}
+      {/* SCREEN 2: PAYMENT METHOD SELECTION */}
       {view === 'payment' && (
         <div className="w-full flex flex-col">
           {/* Header Bar */}
-          <header className="w-full bg-white px-4 py-3 border-b border-gray-100 flex items-center justify-between sticky top-0 z-20 shadow-2xs">
+          <header className="w-full bg-white px-4 py-3 border-b border-gray-200 flex items-center justify-between sticky top-0 z-20">
             <button
               onClick={() => setView('amount')}
-              className="w-7 h-7 -ml-2 rounded-full flex items-center justify-center text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer active:scale-95"
+              className="w-7 h-7 -ml-2 rounded-full flex items-center justify-center text-black hover:bg-gray-100 transition-colors cursor-pointer active:scale-95"
             >
               <ChevronLeft size={22} />
             </button>
-            <h1 className="text-base font-bold text-gray-900 tracking-tight">Recharge</h1>
+            <h1 className="text-base font-bold text-black tracking-tight">Select Payment</h1>
             <button
               onClick={() => setShowHelpModal(true)}
-              className="text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors cursor-pointer active:scale-95"
+              className="text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer active:scale-95"
             >
               Help
             </button>
           </header>
 
-          {/* Top Blue Amount Banner */}
-          <div className="w-full bg-[#0088ff] px-4 py-4 text-white">
-            <span className="text-xs font-medium text-blue-100">Recharge Amount</span>
+          {/* Top Amount Banner */}
+          <div className="w-full bg-white border-b border-gray-200 px-4 py-4 text-black">
+            <span className="text-xs font-medium text-gray-500">Recharge Amount</span>
             <div className="text-3xl font-black tracking-tight mt-1 flex items-baseline">
               <span>₹ {Number(amount).toLocaleString()}</span>
             </div>
@@ -394,8 +371,8 @@ const Recharge = () => {
                 onClick={() => setPaymentTab('upi')}
                 className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   paymentTab === 'upi'
-                    ? 'bg-[#0088ff] text-white shadow-xs'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-gray-600 hover:text-black'
                 }`}
               >
                 <span>UPI PAY</span>
@@ -404,37 +381,36 @@ const Recharge = () => {
                 onClick={() => setPaymentTab('qr')}
                 className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   paymentTab === 'qr'
-                    ? 'bg-[#0088ff] text-white shadow-xs'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-gray-600 hover:text-black'
                 }`}
               >
                 <QrCode size={14} />
-                <span>QR code</span>
+                <span>QR Code</span>
               </button>
             </div>
 
-            {/* TAB CONTENT 1: UPI PAY (APP DIRECT) */}
+            {/* TAB CONTENT 1: UPI PAY */}
             {paymentTab === 'upi' && (
               <div className="space-y-3">
-                <span className="text-xs font-semibold text-gray-600 tracking-tight block">
-                  Select Payment Method
+                <span className="text-xs font-semibold text-black tracking-tight block">
+                  Select App
                 </span>
 
-                {/* Branded Payment Method List Card */}
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-2xs divide-y divide-gray-100 overflow-hidden">
+                <div className="bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden shadow-xs">
                   {/* Google Pay */}
                   <label
                     onClick={() => setPaymentMethod('gpay')}
-                    className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-gray-50/80 transition-colors"
+                    className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <GooglePayIcon />
-                      <span className="text-sm font-semibold text-gray-800">G Pay</span>
+                      <span className="text-sm font-semibold text-black">Google Pay</span>
                     </div>
                     <div
                       className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                         paymentMethod === 'gpay'
-                          ? 'border-[#0088ff] bg-[#0088ff]'
+                          ? 'border-blue-600 bg-blue-600'
                           : 'border-gray-300'
                       }`}
                     >
@@ -445,16 +421,16 @@ const Recharge = () => {
                   {/* Paytm */}
                   <label
                     onClick={() => setPaymentMethod('paytm')}
-                    className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-gray-50/80 transition-colors"
+                    className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <PaytmIcon />
-                      <span className="text-sm font-semibold text-gray-800">paytm</span>
+                      <span className="text-sm font-semibold text-black">Paytm</span>
                     </div>
                     <div
                       className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                         paymentMethod === 'paytm'
-                          ? 'border-[#0088ff] bg-[#0088ff]'
+                          ? 'border-blue-600 bg-blue-600'
                           : 'border-gray-300'
                       }`}
                     >
@@ -465,16 +441,16 @@ const Recharge = () => {
                   {/* PhonePe */}
                   <label
                     onClick={() => setPaymentMethod('phonepe')}
-                    className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-gray-50/80 transition-colors"
+                    className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <PhonePeIcon />
-                      <span className="text-sm font-semibold text-gray-800">PhonePe</span>
+                      <span className="text-sm font-semibold text-black">PhonePe</span>
                     </div>
                     <div
                       className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                         paymentMethod === 'phonepe'
-                          ? 'border-[#0088ff] bg-[#0088ff]'
+                          ? 'border-blue-600 bg-blue-600'
                           : 'border-gray-300'
                       }`}
                     >
@@ -485,16 +461,16 @@ const Recharge = () => {
                   {/* Amazon Pay */}
                   <label
                     onClick={() => setPaymentMethod('amazonpay')}
-                    className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-gray-50/80 transition-colors"
+                    className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <AmazonPayIcon />
-                      <span className="text-sm font-semibold text-gray-800">amazon pay</span>
+                      <span className="text-sm font-semibold text-black">Amazon Pay</span>
                     </div>
                     <div
                       className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                         paymentMethod === 'amazonpay'
-                          ? 'border-[#0088ff] bg-[#0088ff]'
+                          ? 'border-blue-600 bg-blue-600'
                           : 'border-gray-300'
                       }`}
                     >
@@ -509,39 +485,36 @@ const Recharge = () => {
 
             {/* TAB CONTENT 2: QR CODE */}
             {paymentTab === 'qr' && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-2xs p-5 flex flex-col items-center text-center">
-                <span className="text-xs font-bold text-gray-800">Scan & Pay ₹{amount}</span>
-                <p className="text-[11px] text-gray-400 mt-0.5">Use any UPI app (GPay, PhonePe, Paytm)</p>
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-xs p-5 flex flex-col items-center text-center">
+                <span className="text-xs font-bold text-black">Scan & Pay ₹{amount}</span>
+                <p className="text-[11px] text-gray-500 mt-0.5">Use any UPI app</p>
 
-                {/* Simulated Stylized QR Code */}
-                <div className="my-4 p-3 bg-white border-2 border-gray-200 rounded-2xl shadow-xs relative">
-                  <div className="w-40 h-40 bg-[#FAF8F5] border border-gray-200 rounded-xl flex flex-col items-center justify-center relative overflow-hidden">
-                    {/* Simulated QR Pattern Matrix */}
+                <div className="my-4 p-3 bg-white border border-gray-200 rounded-2xl shadow-xs relative">
+                  <div className="w-40 h-40 bg-white border border-gray-200 rounded-xl flex flex-col items-center justify-center relative overflow-hidden">
                     <div className="grid grid-cols-5 gap-1.5 p-3 opacity-80">
                       {Array.from({ length: 25 }).map((_, i) => (
                         <div
                           key={i}
                           className={`w-5 h-5 rounded-xs ${
-                            i % 2 === 0 || i % 5 === 0 ? 'bg-gray-900' : 'bg-gray-200'
+                            i % 2 === 0 || i % 5 === 0 ? 'bg-black' : 'bg-gray-200'
                           }`}
                         />
                       ))}
                     </div>
-                    {/* Center Brand Badge */}
-                    <div className="absolute inset-0 m-auto w-10 h-10 bg-[#0088ff] rounded-lg border-2 border-white flex items-center justify-center text-white font-black text-xs shadow-md">
+                    <div className="absolute inset-0 m-auto w-10 h-10 bg-blue-600 rounded-lg border-2 border-white flex items-center justify-center text-white font-black text-xs shadow-md">
                       ₹
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-full text-xs font-mono text-gray-700">
+                <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-full text-xs font-mono text-black">
                   <span>jannat.recharge@upi</span>
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText('jannat.recharge@upi');
                       showToast('UPI ID copied to clipboard!');
                     }}
-                    className="text-[#0088ff] hover:text-[#0066cc] cursor-pointer"
+                    className="text-blue-600 hover:text-blue-700 cursor-pointer"
                   >
                     <Copy size={13} />
                   </button>
@@ -552,43 +525,28 @@ const Recharge = () => {
             {/* Pay Action Button */}
             <button
               onClick={() => setShowPaymentModal(true)}
-              className="w-full py-3.5 bg-[#0088ff] hover:bg-[#0077ee] text-white text-base font-bold rounded-2xl shadow-md shadow-blue-500/20 active:scale-[0.98] transition-all cursor-pointer text-center flex items-center justify-center gap-2"
+              className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white text-base font-bold rounded-2xl shadow-sm active:scale-[0.98] transition-all cursor-pointer text-center flex items-center justify-center gap-2"
             >
               <span>Pay ₹{Number(amount).toLocaleString()}</span>
               <ArrowRight size={16} />
             </button>
-
-            {/* Tips Section (from reference screenshot) */}
-            <div className="space-y-1.5 pt-2">
-              <h3 className="text-xs font-bold text-gray-800">Tips</h3>
-              <p className="text-[11px] text-gray-400 leading-relaxed">
-                Welcome to use the quick recharge mode, please use APP to complete the payment of ₹
-                {amount}.
-              </p>
-              <p className="text-[11px] text-gray-400 leading-relaxed">
-                The transaction funds are guaranteed by the Jannat platform throughout the process,
-                which is very safe.
-              </p>
-            </div>
           </div>
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* 4. PAYMENT MODAL / SIMULATION CONFIRMATION POPUP                           */}
-      {/* ========================================================================= */}
+      {/* PAYMENT MODAL */}
       {showPaymentModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl border border-gray-200">
             {/* Header */}
-            <div className="bg-[#0088ff] p-4 text-white flex items-center justify-between">
+            <div className="bg-white border-b border-gray-200 p-4 text-black flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <CreditCard size={18} />
-                <span className="text-sm font-bold">UPI Payment Gateway</span>
+                <CreditCard size={18} className="text-blue-600" />
+                <span className="text-sm font-bold text-black">Payment Gateway</span>
               </div>
               <button
                 onClick={closePaymentFlow}
-                className="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white cursor-pointer transition-colors"
+                className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-black cursor-pointer transition-colors"
               >
                 <X size={15} />
               </button>
@@ -598,21 +556,19 @@ const Recharge = () => {
             <div className="p-5">
               {!paymentSuccess ? (
                 <div className="space-y-4">
-                  {/* Amount Pill */}
-                  <div className="bg-blue-50 rounded-2xl p-3.5 border border-blue-100 flex items-center justify-between">
+                  <div className="bg-gray-50 rounded-xl p-3.5 border border-gray-200 flex items-center justify-between">
                     <div>
-                      <span className="text-[11px] text-blue-600 font-medium">Recharge Amount</span>
-                      <p className="text-xl font-black text-blue-950">₹{amount}</p>
+                      <span className="text-[11px] text-gray-500 font-medium">Recharge Amount</span>
+                      <p className="text-xl font-black text-black">₹{amount}</p>
                     </div>
-                    <span className="text-xs font-bold text-[#0088ff] bg-white px-2.5 py-1 rounded-full border border-blue-200 shadow-2xs">
+                    <span className="text-xs font-bold text-blue-600 bg-white px-2.5 py-1 rounded-full border border-gray-200 shadow-2xs">
                       {paymentTab === 'qr' ? 'QR Scan' : getMethodLabel(paymentMethod)}
                     </span>
                   </div>
 
-                  {/* UPI Reference / UTR instructions */}
                   <div className="space-y-2">
-                    <label className="text-xs font-semibold text-gray-700 block">
-                      12-Digit UTR / Ref Number (Optional for test)
+                    <label className="text-xs font-semibold text-black block">
+                      12-Digit UTR / Ref Number (Optional)
                     </label>
                     <input
                       type="text"
@@ -620,18 +576,14 @@ const Recharge = () => {
                       placeholder="e.g. 428901234567"
                       value={utrNumber}
                       onChange={(e) => setUtrNumber(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs text-gray-900 outline-hidden focus:border-[#0088ff] font-mono"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs text-black outline-none focus:border-blue-600 font-mono"
                     />
-                    <p className="text-[10px] text-gray-400">
-                      Submit after completing payment in your UPI app for instant verification.
-                    </p>
                   </div>
 
-                  {/* Submit / Confirm Payment button */}
                   <button
                     onClick={handleConfirmPayment}
                     disabled={isProcessing}
-                    className="w-full py-3 bg-[#0088ff] hover:bg-[#0077ee] text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/20 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     {isProcessing ? (
                       <>
@@ -647,33 +599,32 @@ const Recharge = () => {
                   </button>
                 </div>
               ) : (
-                /* Payment Success Celebration State */
                 <div className="py-4 text-center space-y-3">
-                  <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-inner animate-bounce">
+                  <div className="w-16 h-16 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto border border-blue-200">
                     <CheckCircle2 size={36} />
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-black text-gray-900">Recharge Successful!</h3>
+                    <h3 className="text-lg font-black text-black">Recharge Successful!</h3>
                     <p className="text-xs text-gray-500 mt-1">
                       ₹{amount} has been added to your Jannat wallet balance.
                     </p>
                   </div>
 
-                  <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 text-left text-xs space-y-1 font-mono">
+                  <div className="bg-gray-50 rounded-xl p-3 border border-gray-200 text-left text-xs space-y-1 font-mono">
                     <div className="flex justify-between text-gray-500">
                       <span>Status:</span>
-                      <span className="text-emerald-600 font-bold">COMPLETED</span>
+                      <span className="text-black font-bold">COMPLETED</span>
                     </div>
                     <div className="flex justify-between text-gray-500">
                       <span>Transaction ID:</span>
-                      <span className="text-gray-800 font-bold">{lastTxId}</span>
+                      <span className="text-black font-bold">{lastTxId}</span>
                     </div>
                   </div>
 
                   <button
                     onClick={closePaymentFlow}
-                    className="w-full py-2.5 bg-[#0088ff] hover:bg-[#0077ee] text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer"
+                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
                   >
                     Return to Wallet
                   </button>
@@ -684,43 +635,39 @@ const Recharge = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* 5. RECORDS MODAL / TRANSACTION HISTORY                                    */}
-      {/* ========================================================================= */}
+      {/* RECORDS MODAL */}
       {showRecordsModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-gray-100 max-h-[85vh] flex flex-col animate-in fade-in zoom-in-95 duration-200">
-            {/* Header */}
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl border border-gray-200 max-h-[85vh] flex flex-col">
+            <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Clock size={16} className="text-gray-700" />
-                <h2 className="text-sm font-bold text-gray-900">Recharge Records</h2>
+                <Clock size={16} className="text-blue-600" />
+                <h2 className="text-sm font-bold text-black">Recharge Records</h2>
               </div>
               <button
                 onClick={() => setShowRecordsModal(false)}
-                className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:text-gray-900 cursor-pointer"
+                className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-black cursor-pointer"
               >
                 <X size={15} />
               </button>
             </div>
 
-            {/* Records List */}
             <div className="p-4 overflow-y-auto divide-y divide-gray-100 space-y-2">
               {records.length > 0 ? (
                 records.map((rec) => (
                   <div key={rec.id} className="pt-2.5 pb-2.5 flex items-center justify-between">
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-gray-900">₹{rec.amount}</span>
-                        <span className="text-[10px] bg-emerald-50 text-emerald-600 font-bold px-1.5 py-0.2 rounded">
+                        <span className="text-xs font-bold text-black">₹{rec.amount}</span>
+                        <span className="text-[10px] bg-blue-50 text-blue-600 font-bold px-1.5 py-0.2 rounded border border-blue-200">
                           {rec.status}
                         </span>
                       </div>
-                      <p className="text-[10px] text-gray-400 mt-0.5">
+                      <p className="text-[10px] text-gray-500 mt-0.5">
                         {rec.method} • {rec.date}
                       </p>
                     </div>
-                    <span className="text-[10px] font-mono text-gray-400">{rec.id}</span>
+                    <span className="text-[10px] font-mono text-gray-500">{rec.id}</span>
                   </div>
                 ))
               ) : (
@@ -731,55 +678,44 @@ const Recharge = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* 6. HELP MODAL / RECHARGE GUIDE                                            */}
-      {/* ========================================================================= */}
+      {/* HELP MODAL */}
       {showHelpModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-gray-100 max-h-[85vh] flex flex-col animate-in fade-in zoom-in-95 duration-200">
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl border border-gray-200 max-h-[85vh] flex flex-col">
+            <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <HelpCircle size={16} className="text-[#0088ff]" />
-                <h2 className="text-sm font-bold text-gray-900">Recharge Help & FAQ</h2>
+                <HelpCircle size={16} className="text-blue-600" />
+                <h2 className="text-sm font-bold text-black">Recharge FAQ</h2>
               </div>
               <button
                 onClick={() => setShowHelpModal(false)}
-                className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:text-gray-900 cursor-pointer"
+                className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-black cursor-pointer"
               >
                 <X size={15} />
               </button>
             </div>
 
-            <div className="p-4 overflow-y-auto space-y-3.5 text-xs text-gray-600">
-              <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
-                <h4 className="font-bold text-blue-900 mb-1">1. How to recharge?</h4>
-                <p className="text-[11px] text-blue-700 leading-relaxed">
-                  Enter your amount, pick an instant preset, select your favorite UPI app (Google Pay,
-                  Paytm, PhonePe, Amazon Pay) or scan the QR Code.
+            <div className="p-4 overflow-y-auto space-y-3 text-xs text-black">
+              <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                <h4 className="font-bold text-black mb-1">1. How to recharge?</h4>
+                <p className="text-[11px] text-gray-600 leading-relaxed">
+                  Enter your amount, pick a preset, select your UPI app or scan the QR Code.
                 </p>
               </div>
 
               <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
-                <h4 className="font-bold text-gray-800 mb-1">2. When will the funds reflect?</h4>
-                <p className="text-[11px] text-gray-500 leading-relaxed">
+                <h4 className="font-bold text-black mb-1">2. When will funds reflect?</h4>
+                <p className="text-[11px] text-gray-600 leading-relaxed">
                   Recharges are automatically credited to your balance within 30-60 seconds.
-                </p>
-              </div>
-
-              <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
-                <h4 className="font-bold text-gray-800 mb-1">3. Money debited but not added?</h4>
-                <p className="text-[11px] text-gray-500 leading-relaxed">
-                  Open Records, tap on your transaction, and input the 12-digit UTR reference number
-                  from your bank SMS or payment app receipt.
                 </p>
               </div>
 
               <button
                 onClick={() => {
                   setShowHelpModal(false);
-                  showToast('Contacting 24/7 Telegram Support...');
+                  showToast('Contacting 24/7 Support...');
                 }}
-                className="w-full py-2.5 bg-gray-900 hover:bg-black text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >
                 <ExternalLink size={14} />
                 <span>Contact 24/7 Live Support</span>

@@ -9,6 +9,7 @@ import Dashboard from '../pages/user/Dashboard';
 import PublicRoute from './PublicRoute';
 import Recharge from '../pages/recharge/Recharge';
 import Invite from '../pages/invite/Invite';
+import AdminRecharge from '../admin/pages/AdminRecharge';
 
 export const routes = createBrowserRouter([
   // Public/Guest-only routes (redirects to '/' if already logged in)
@@ -48,6 +49,10 @@ export const routes = createBrowserRouter([
       {
         path: "/account",
         element: <Dashboard />
+      },
+      {
+        path : "/admin/recharge",
+        element : <AdminRecharge/>
       }
     ],
   },

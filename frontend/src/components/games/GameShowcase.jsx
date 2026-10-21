@@ -72,22 +72,22 @@ const GameShowcase = () => {
   const currentWinner = LIVE_WINNERS[activeWinnerIdx];
 
   return (
-    <div className="h-full w-full flex flex-col justify-between p-4 sm:p-5 bg-[#1A110B] text-white relative overflow-hidden select-none">
+    <div className="h-full w-full flex flex-col justify-between p-4 sm:p-5 bg-blue-600 text-white relative overflow-hidden select-none">
       
       {/* Background Ambience */}
-      <div className="absolute -top-20 -left-20 w-60 h-60 rounded-full bg-[#8B3A13] opacity-25 blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-20 -right-20 w-60 h-60 rounded-full bg-[#D4AF37] opacity-15 blur-3xl pointer-events-none" />
+      <div className="absolute -top-20 -left-20 w-60 h-60 rounded-full bg-blue-400 opacity-25 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-20 -right-20 w-60 h-60 rounded-full bg-blue-300 opacity-15 blur-3xl pointer-events-none" />
 
       {/* Top Header */}
       <div className="relative z-10 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#271911] border border-[#3E271B]">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
-          <span className="text-[10px] font-medium text-[#E6D5C7]">
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-700 border border-blue-500">
+          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+          <span className="text-[10px] font-medium text-blue-100">
             14.2k Online
           </span>
         </div>
 
-        <div className="flex items-center gap-1 text-[9px] text-[#D4AF37] bg-[#271911] px-2 py-0.5 rounded-full border border-[#4A3222] font-semibold tracking-wider uppercase">
+        <div className="flex items-center gap-1 text-[9px] text-white bg-blue-700 px-2 py-0.5 rounded-full border border-blue-500 font-semibold tracking-wider uppercase">
           <Trophy size={11} />
           <span>Jannat Casino</span>
         </div>
@@ -98,34 +98,34 @@ const GameShowcase = () => {
         
         {/* Jackpot Header */}
         <div className="text-center mb-2">
-          <span className="text-[9px] uppercase tracking-widest text-[#B39985] font-semibold flex items-center justify-center gap-1">
-            <Sparkles size={10} className="text-[#D4AF37]" />
+          <span className="text-[9px] uppercase tracking-widest text-blue-200 font-semibold flex items-center justify-center gap-1">
+            <Sparkles size={10} className="text-white" />
             Grand Progressive Jackpot
-            <Sparkles size={10} className="text-[#D4AF37]" />
+            <Sparkles size={10} className="text-white" />
           </span>
-          <div className="text-xl sm:text-2xl font-extrabold text-[#F5E6D3] tracking-tight font-mono mt-0.5">
+          <div className="text-xl sm:text-2xl font-extrabold text-white tracking-tight font-mono mt-0.5">
             ₹ {jackpot.toLocaleString('en-IN')}
           </div>
         </div>
 
         {/* Interactive Mini Slot Machine */}
-        <div className="bg-[#241710] border border-[#3E281C] rounded-xl p-3 shadow-lg">
+        <div className="bg-blue-700 border border-blue-500 rounded-xl p-3 shadow-lg">
           <div className="flex items-center justify-between mb-2 px-0.5">
-            <div className="flex items-center gap-1 text-[11px] text-[#D5C2B1] font-medium">
-              <Flame size={12} className="text-[#EF4444]" />
+            <div className="flex items-center gap-1 text-[11px] text-blue-100 font-medium">
+              <Flame size={12} className="text-white" />
               <span>Lucky Reel Demo</span>
             </div>
-            <span className="text-[9px] text-[#D4AF37] bg-[#170E08] px-1.5 py-0.5 rounded border border-[#382317]">
+            <span className="text-[9px] text-white bg-blue-800 px-1.5 py-0.5 rounded border border-blue-600">
               Free Demo
             </span>
           </div>
 
           {/* Slot Reels */}
-          <div className="grid grid-cols-3 gap-1.5 bg-[#150D08] p-2 rounded-lg border border-[#382317] mb-2.5">
+          <div className="grid grid-cols-3 gap-1.5 bg-blue-800 p-2 rounded-lg border border-blue-600 mb-2.5">
             {slotValues.map((val, idx) => (
               <div
                 key={idx}
-                className={`h-12 sm:h-14 bg-[#23150D] border border-[#462C1D] rounded flex items-center justify-center text-xl sm:text-2xl shadow-inner transition-transform duration-100 ${
+                className={`h-12 sm:h-14 bg-blue-900 border border-blue-600 rounded flex items-center justify-center text-xl sm:text-2xl shadow-inner transition-transform duration-100 ${
                   isSpinning ? 'scale-95 animate-bounce' : 'scale-100'
                 }`}
               >
@@ -138,14 +138,14 @@ const GameShowcase = () => {
           <button
             onClick={spinMiniGame}
             disabled={isSpinning}
-            className="w-full py-2 px-3 bg-[#8B3A13] hover:bg-[#A34417] active:scale-[0.98] text-white font-bold text-[11px] uppercase tracking-wider rounded-lg shadow transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+            className="w-full py-2 px-3 bg-white hover:bg-gray-100 active:scale-[0.98] text-blue-600 font-bold text-[11px] uppercase tracking-wider rounded-lg shadow transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
           >
-            <Coins size={13} className="text-[#FDE68A]" />
+            <Coins size={13} className="text-blue-600" />
             <span>{isSpinning ? 'Spinning...' : 'Spin Demo'}</span>
           </button>
 
           {/* Status Message */}
-          <p className="text-center text-[10px] text-[#D4AF37] mt-1.5 font-medium min-h-[14px] truncate">
+          <p className="text-center text-[10px] text-blue-100 mt-1.5 font-medium min-h-[14px] truncate">
             {spinMessage}
           </p>
         </div>
@@ -155,16 +155,16 @@ const GameShowcase = () => {
           {GAMES_LIST.map((game) => (
             <div
               key={game.id}
-              className="bg-[#241710]/90 hover:bg-[#2F1F15] border border-[#3E281C] rounded-lg p-1.5 text-center transition-all cursor-pointer group"
+              className="bg-blue-700/90 hover:bg-blue-700 border border-blue-500 rounded-lg p-1.5 text-center transition-all cursor-pointer group"
             >
               <div className="text-base mb-0.5 group-hover:scale-110 transition-transform">
                 {game.icon}
               </div>
-              <div className="text-[9px] font-semibold text-[#EDE0D4] truncate">
+              <div className="text-[9px] font-semibold text-white truncate">
                 {game.name}
               </div>
-              <div className="text-[8px] text-[#9E8777] flex items-center justify-center gap-0.5 mt-0.5">
-                <span className="w-1 h-1 rounded-full bg-[#10B981]" />
+              <div className="text-[8px] text-blue-200 flex items-center justify-center gap-0.5 mt-0.5">
+                <span className="w-1 h-1 rounded-full bg-white" />
                 {game.players}
               </div>
             </div>
@@ -175,32 +175,32 @@ const GameShowcase = () => {
 
       {/* Bottom Footer */}
       <div className="relative z-10 space-y-1.5">
-        <div className="bg-[#241710] border border-[#3E281C] rounded-lg p-1.5 flex items-center justify-between text-xs">
+        <div className="bg-blue-700 border border-blue-500 rounded-lg p-1.5 flex items-center justify-between text-xs">
           <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 rounded bg-[#8B3A13] text-[#FDE68A] flex items-center justify-center font-bold text-[10px]">
+            <div className="w-5 h-5 rounded bg-white text-blue-600 flex items-center justify-center font-bold text-[10px]">
               ₹
             </div>
             <div>
-              <div className="font-semibold text-[#EDE0D4] text-[10px] leading-tight">
-                {currentWinner.name} <span className="text-[8px] text-[#A68F7E] font-normal">&bull; {currentWinner.game}</span>
+              <div className="font-semibold text-white text-[10px] leading-tight">
+                {currentWinner.name} <span className="text-[8px] text-blue-200 font-normal">&bull; {currentWinner.game}</span>
               </div>
-              <div className="text-[8px] text-[#34D399] font-medium">
+              <div className="text-[8px] text-blue-100 font-medium">
                 Won {currentWinner.amount} ({currentWinner.time})
               </div>
             </div>
           </div>
-          <span className="text-[8px] font-bold text-[#D4AF37] px-1 py-0.5 bg-[#170E08] rounded border border-[#382317] uppercase">
+          <span className="text-[8px] font-bold text-white px-1 py-0.5 bg-blue-800 rounded border border-blue-600 uppercase">
             Live
           </span>
         </div>
 
-        <div className="flex items-center justify-between text-[9px] text-[#A68F7E] pt-1 border-t border-[#291B12]">
+        <div className="flex items-center justify-between text-[9px] text-blue-200 pt-1 border-t border-blue-500">
           <div className="flex items-center gap-1">
-            <Zap size={11} className="text-[#D4AF37]" />
+            <Zap size={11} className="text-white" />
             <span>Instant UPI Cashouts</span>
           </div>
           <div className="flex items-center gap-1">
-            <ShieldCheck size={11} className="text-[#10B981]" />
+            <ShieldCheck size={11} className="text-white" />
             <span>256-Bit SSL</span>
           </div>
         </div>
