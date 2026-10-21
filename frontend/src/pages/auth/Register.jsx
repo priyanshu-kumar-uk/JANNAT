@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { User, Phone, Lock, Eye, EyeOff, ArrowRight, ArrowLeft } from 'lucide-react';
-import GameShowcase from '../../components/games/GameShowcase';
 import { registerUser, clearAuthError } from '../../store/slices/authSlice';
 
 const Register = () => {
@@ -83,18 +82,12 @@ const Register = () => {
   const displayError = errorMessage || authError;
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-white flex items-center justify-center p-2 sm:p-4 select-none">
+    <div className="h-screen w-full overflow-hidden bg-gray-500 flex items-center justify-center p-2 sm:p-4 select-none">
       
-      {/* Centralized Card Container - Fixed to Viewport Height */}
-      <div className="w-full max-w-4xl max-h-[95vh] bg-white border border-gray-200 rounded-3xl shadow-sm overflow-hidden flex flex-col md:flex-row my-auto relative">
-        
-        {/* Left Side: Game Showcase */}
-        <div className="hidden md:flex w-1/2 bg-blue-600">
-          <GameShowcase />
-        </div>
+
 
         {/* Right Side: Compact Non-scrolling Register Form */}
-        <div className="w-full md:w-1/2 p-4 sm:p-6 lg:p-7 flex flex-col justify-between bg-white overflow-hidden relative">
+        <div className="w-full h-screen md:w-[420px] p-4 sm:p-6 lg:p-7 flex flex-col justify-between bg-white overflow-hidden relative">
           
           {/* Top Bar with Back to Home Button */}
           <div className="flex items-center justify-between w-full mb-1 sm:mb-2">
@@ -264,8 +257,6 @@ const Register = () => {
           </div>
 
         </div>
-
-      </div>
 
     </div>
   );
