@@ -21,41 +21,11 @@ const Home = () => {
   const dispatch = useDispatch();
   const { user, isAuthenticated, isInitialized } = useSelector((state) => state.auth);
 
-  // Live winner announcement ticker feed
-  const winnersList = [
-    { user: '****819', amount: '₹6,000', game: 'Parity' },
-    { user: '****352', amount: '₹12,400', game: 'Fast-Parity' },
-    { user: '****904', amount: '₹3,500', game: 'MineSweeper' },
-    { user: '****118', amount: '₹8,200', game: 'Crash' },
-    { user: '****627', amount: '₹15,000', game: 'Andar Bahar' },
-    { user: '****445', amount: '₹22,500', game: 'Fast-Parity' },
-  ];
-
-  const [currentWinnerIndex, setCurrentWinnerIndex] = useState(0);
   const [toastMessage, setToastMessage] = useState(null);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authModalReason, setAuthModalReason] = useState('');
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  // Winner ticker interval
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentWinnerIndex((prev) => (prev + 1) % winnersList.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [winnersList.length]);
 
-  // Show Auth popup automatically on initial page visit if not authenticated
-  useEffect(() => {
-    if (isInitialized && !isAuthenticated) {
-      const timer = setTimeout(() => {
-        setShowAuthModal(true);
-        setAuthModalReason('Join Jannat to play thrilling games & win real cash rewards!');
-      }, 400);
-      return () => clearTimeout(timer);
-    }
-  }, [isInitialized, isAuthenticated]);
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -70,8 +40,7 @@ const Home = () => {
    */
   const handleGuardedAction = (featureName, callback) => {
     if (!isAuthenticated) {
-      setAuthModalReason(`Please Login to access ${featureName}`);
-      setShowAuthModal(true);
+      navigate("/login");
       return;
     }
 
@@ -93,7 +62,6 @@ const Home = () => {
     }
   };
 
-  const currentWinner = winnersList[currentWinnerIndex];
 
   // User display helpers
   const displayBalance = isAuthenticated ? (user?.walletBalance ?? 0).toFixed(2) : '0.00';
@@ -110,74 +78,7 @@ const Home = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* 1. AUTHENTICATION REQUIRED MODAL                                          */}
-      {/* ========================================================================= */}
-      {showAuthModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl border border-gray-200">
-            {/* Modal Top Banner */}
-            <div className="relative bg-white border-b border-gray-100 p-5 text-center text-black">
-              <button
-                onClick={() => setShowAuthModal(false)}
-                className="absolute top-3 right-3 w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-black transition-colors cursor-pointer"
-              >
-                <X size={15} />
-              </button>
 
-              <div className="w-14 h-14 mx-auto rounded-2xl bg-white p-1.5 shadow-sm border border-gray-200 mb-2.5 flex items-center justify-center">
-                <img
-                  src="/logo/Jannat-Logo.png"
-                  alt="Jannat Logo"
-                  className="w-full h-full object-contain"
-                />
-              </div>
-
-              <h2 className="text-lg font-bold tracking-tight text-black">
-                Welcome to Jannat
-              </h2>
-              <p className="text-[12px] text-gray-600 mt-1 max-w-[240px] mx-auto leading-relaxed">
-                {authModalReason || 'Login or Create Account to start playing & withdraw instantly.'}
-              </p>
-            </div>
-
-            {/* Modal Actions */}
-            <div className="p-4 space-y-2.5 bg-white">
-              {/* Login Button */}
-              <button
-                onClick={() => {
-                  setShowAuthModal(false);
-                  navigate('/login');
-                }}
-                className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.98]"
-              >
-                <span>Login to Account</span>
-                <ArrowRight size={14} />
-              </button>
-
-              {/* Register Button */}
-              <button
-                onClick={() => {
-                  setShowAuthModal(false);
-                  navigate('/register');
-                }}
-                className="w-full py-2.5 px-4 bg-white hover:bg-gray-50 text-blue-600 border border-blue-600 text-xs font-bold rounded-xl shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.98]"
-              >
-                <Gift size={14} />
-                <span>Create New Account</span>
-              </button>
-
-              {/* Browse as guest */}
-              <button
-                onClick={() => setShowAuthModal(false)}
-                className="w-full py-1.5 text-center text-[11px] font-semibold text-gray-500 hover:text-black transition-colors cursor-pointer"
-              >
-                Continue Previewing Games
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ========================================================================= */}
       {/* 2. USER PROFILE & LOGOUT MODAL                                            */}
@@ -299,30 +200,7 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Live Winner Ticker Bar */}
-        <div
-          onClick={() => handleGuardedAction('Live Winners Feed')}
-          className="w-full px-3.5 py-1.5 flex items-center justify-between bg-white border-t border-gray-100 cursor-pointer"
-        >
-          <div className="flex items-center gap-2 overflow-hidden flex-1 mr-2">
-            <span className="flex h-2 w-2 relative shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
-            </span>
 
-            <div className="text-[11px] text-gray-600 truncate tracking-tight">
-              <span className="font-bold text-black">{currentWinner.user}</span>
-              <span className="mx-1 text-gray-500">won</span>
-              <span className="text-black font-black">{currentWinner.amount}</span>
-              <span className="ml-1 text-gray-500">in {currentWinner.game}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center text-[10px] font-bold text-blue-600 shrink-0 gap-0.5">
-            <span>LIVE</span>
-            <TrendingUp size={11} />
-          </div>
-        </div>
       </header>
 
       {/* ========================================================================= */}

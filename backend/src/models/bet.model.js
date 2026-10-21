@@ -24,11 +24,6 @@ const betSchema = new mongoose.Schema(
       required: true,
       default: 10,
     },
-    quantity: {
-      type: Number,
-      required: true,
-      default: 1,
-    },
     amount: {
       type: Number,
       required: true,

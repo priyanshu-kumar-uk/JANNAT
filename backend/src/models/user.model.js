@@ -64,14 +64,6 @@ const userSchema = new mongoose.Schema(
         },
       },
     ],
-    checkInStreak: {
-      type: Number,
-      default: 0,
-    },
-    lastCheckInDate: {
-      type: Date,
-      default: null,
-    },
     totalRecharged: {
       type: Number,
       default: 0,
