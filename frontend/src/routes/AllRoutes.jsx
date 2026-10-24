@@ -6,27 +6,19 @@ import Parity from '../pages/game/Parity';
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
 import Dashboard from '../pages/user/Dashboard';
-import PublicRoute from './PublicRoute';
 import Recharge from '../pages/recharge/Recharge';
 import Invite from '../pages/invite/Invite';
 import AdminRecharge from '../admin/pages/AdminRecharge';
 
 export const routes = createBrowserRouter([
-  // Public/Guest-only routes (redirects to '/' if already logged in)
   {
-    element: <PublicRoute />,
-    children: [
-      {
-        path: '/login',
-        element: <Login />,
-      },
-      {
-        path: '/register',
-        element: <Register />,
-      },
-    ],
+    path: '/login',
+    element: <Login />,
   },
-  // Main App (Home page accessible to public, feature actions intercepted for unauthenticated visitors)
+  {
+    path: '/register',
+    element: <Register />,
+  },
   {
     element: <App />,
     children: [
@@ -39,21 +31,21 @@ export const routes = createBrowserRouter([
         element: <Parity />,
       },
       {
-        path: "/invite",
-        element: <Invite />
+        path: '/invite',
+        element: <Invite />,
       },
       {
-        path: "/recharge",
-        element: <Recharge />
+        path: '/recharge',
+        element: <Recharge />,
       },
       {
-        path: "/account",
-        element: <Dashboard />
+        path: '/account',
+        element: <Dashboard />,
       },
       {
-        path : "/admin/recharge",
-        element : <AdminRecharge/>
-      }
+        path: '/admin/recharge',
+        element: <AdminRecharge />,
+      },
     ],
   },
 ]);
